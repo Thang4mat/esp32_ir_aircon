@@ -83,21 +83,13 @@ const char INDEX_HTML[] PROGMEM = R"HTMLPAGE(
 
   <div class="card">
     <h2>Tốc độ quạt</h2>
-<<<<<<< HEAD
     <p class="caption">Auto: máy tự điều chỉnh tốc độ quạt theo chế độ đang chạy. Ở chế độ Auto và Dry máy không cho chọn quạt (nút bị khóa; mức đã chọn được giữ để dùng lại ở Cool hoặc Fan). Đổi tốc độ quạt sẽ tắt Sleep và Turbo, không tắt Eco. Bật Eco hoặc Sleep đặt quạt về Auto.</p>
-=======
-    <p class="caption">Auto: máy tự điều chỉnh tốc độ quạt theo chế độ đang chạy.</p>
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     <div class="row" id="fanRow"></div>
   </div>
 
   <div class="card">
     <h2>Sleep (Ngủ)</h2>
-<<<<<<< HEAD
     <p class="caption">Giảm dần tốc độ quạt và nới nhiệt độ theo thời gian ban đêm, giúp êm và tiết kiệm điện hơn khi ngủ. Chỉ bật được khi máy đang chạy ở chế độ Auto hoặc Cool. Bật Sleep đặt quạt về Auto. Sleep tự tắt khi đổi chế độ hoặc đổi tốc độ quạt (phải bật lại) và khi bật Eco, Turbo hoặc Clean. Bật/tắt Sleep không ảnh hưởng hẹn giờ.</p>
-=======
-    <p class="caption">Giảm dần tốc độ quạt và nới nhiệt độ theo thời gian ban đêm, giúp êm và tiết kiệm điện hơn khi ngủ. Chỉ bật được khi máy đang chạy ở chế độ Auto hoặc Cool. Sleep tự tắt khi đổi chế độ (phải bật lại) và khi bật Eco, Turbo hoặc Clean. Bật/tắt Sleep không ảnh hưởng hẹn giờ.</p>
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     <div class="row">
       <button id="btnSleepOn" onclick="call('/api/sleep', {on: 1})">Bật</button>
       <button id="btnSleepOff" onclick="call('/api/sleep', {on: 0})">Tắt</button>
@@ -106,11 +98,7 @@ const char INDEX_HTML[] PROGMEM = R"HTMLPAGE(
 
   <div class="card">
     <h2>Eco (Tiết kiệm điện)</h2>
-<<<<<<< HEAD
     <p class="caption">Chế độ tiết kiệm điện của remote. Chỉ bật được khi máy đang chạy ở chế độ Cool. Bật Eco đặt quạt về Auto. Đổi nhiệt độ hoặc tốc độ quạt vẫn giữ Eco. Eco tự tắt khi đổi chế độ, tắt máy hoặc bật Sleep, Turbo, Clean.</p>
-=======
-    <p class="caption">Chế độ tiết kiệm điện của remote. Chỉ bật được khi máy đang chạy ở chế độ Cool. Eco tự tắt khi đổi chế độ, tắt máy hoặc bật Sleep, Turbo, Clean.</p>
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     <div class="row">
       <button id="btnEcoOn" onclick="call('/api/eco', {on: 1})">Bật</button>
       <button id="btnEcoOff" onclick="call('/api/eco', {on: 0})">Tắt</button>
@@ -119,11 +107,7 @@ const char INDEX_HTML[] PROGMEM = R"HTMLPAGE(
 
   <div class="card">
     <h2>Turbo</h2>
-<<<<<<< HEAD
     <p class="caption">Làm lạnh nhanh hết công suất. Chỉ bật được khi máy đang chạy ở chế độ Cool. Turbo tự tắt khi đổi chế độ, đổi tốc độ quạt, tắt máy hoặc bật Sleep, Eco, Clean. Đổi nhiệt độ và đặt hẹn giờ vẫn giữ Turbo. Bật Turbo sẽ tắt Sleep và Eco, không đổi tốc độ quạt. Bật/tắt Turbo không ảnh hưởng hẹn giờ.</p>
-=======
-    <p class="caption">Làm lạnh nhanh hết công suất. Chỉ bật được khi máy đang chạy ở chế độ Cool. Turbo tự tắt khi đổi chế độ, đổi tốc độ quạt, tắt máy hoặc bật Sleep, Eco, Clean. Đổi nhiệt độ vẫn giữ Turbo. Bật Turbo sẽ tắt Sleep và Eco. Bật/tắt Turbo không ảnh hưởng hẹn giờ.</p>
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     <div class="row">
       <button id="btnTurboOn" onclick="call('/api/turbo', {on: 1})">Bật</button>
       <button id="btnTurboOff" onclick="call('/api/turbo', {on: 0})">Tắt</button>
@@ -132,11 +116,7 @@ const char INDEX_HTML[] PROGMEM = R"HTMLPAGE(
 
   <div class="card">
     <h2>Clean (Tự làm sạch)</h2>
-<<<<<<< HEAD
     <p class="caption">Máy tự làm sạch dàn lạnh trong 20 phút rồi tự tắt. Chỉ bật được khi máy đang chạy. Bật Clean sẽ hủy hẹn giờ bật/tắt, Eco, Sleep và Turbo. Trong lúc Clean, máy chỉ nhận nút Clean (bấm Tắt để dừng, máy sẽ tắt hẳn), nút Nguồn (Tắt) và nút Light; các nút khác sẽ báo lỗi. Trang này không tự cập nhật: sau khi Clean xong hãy tải lại trang để thấy máy đã tắt.</p>
-=======
-    <p class="caption">Máy tự làm sạch dàn lạnh trong 30 phút rồi tự tắt. Chỉ bật được khi máy đang chạy. Bật Clean sẽ hủy hẹn giờ bật/tắt, Eco, Sleep và Turbo. Trong lúc Clean, máy chỉ nhận nút Clean (bấm Tắt để dừng, máy sẽ tắt hẳn) và nút Nguồn; các nút khác sẽ báo lỗi. Trang này không tự cập nhật: sau khi Clean xong hãy tải lại trang để thấy máy đã tắt.</p>
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     <div class="row">
       <button id="btnCleanOn" onclick="call('/api/clean', {on: 1})">Bật</button>
       <button id="btnCleanOff" onclick="call('/api/clean', {on: 0})">Tắt</button>
@@ -145,11 +125,7 @@ const char INDEX_HTML[] PROGMEM = R"HTMLPAGE(
 
   <div class="card">
     <h2>Light (Đèn hiển thị)</h2>
-<<<<<<< HEAD
     <p class="caption">Bật/tắt đèn hiển thị trên dàn lạnh. Đây là nút "đảo trạng thái" giống remote thật, nên trang này không hiển thị trạng thái đèn. Bấm được cả khi máy đang tắt (máy chỉ bíp, đèn trạng thái không sáng vì máy tắt) và cả khi đang Clean.</p>
-=======
-    <p class="caption">Bật/tắt đèn hiển thị trên dàn lạnh. Đây là nút "đảo trạng thái" giống remote thật, nên trang này không hiển thị trạng thái đèn. Bấm được cả khi máy đang tắt (máy chỉ bíp, đèn trạng thái không sáng vì máy tắt).</p>
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     <div class="row"><button onclick="call('/api/light', {})">Bấm để đảo Light</button></div>
   </div>
 
@@ -230,21 +206,15 @@ const char INDEX_HTML[] PROGMEM = R"HTMLPAGE(
       modeRow.appendChild(b);
     });
 
-<<<<<<< HEAD
     // Auto (0) và Dry (2): remote không cho chọn quạt. Vẫn tô sáng mức đã lưu (dùng lại ở Cool/Fan).
     var fanLocked = state.mode === 0 || state.mode === 2;
-=======
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     var fanRow = document.getElementById('fanRow');
     fanRow.innerHTML = '';
     FANS.forEach(function(f) {
       var b = document.createElement('button');
       b.innerText = f[1];
       if (state.fan === f[0]) b.className = 'active';
-<<<<<<< HEAD
       b.disabled = fanLocked;
-=======
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
       b.onclick = function() { setClimate({fan: f[0]}); };
       fanRow.appendChild(b);
     });

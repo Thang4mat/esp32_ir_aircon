@@ -8,15 +8,11 @@
 //   - Khung trạng thái thường cũng chính là lệnh HỦY hẹn giờ.
 //   - Hẹn giờ = khung 48-bit mang theo cả cài đặt hiện tại. Khi đang hẹn giờ,
 //     remote gửi lại khung hẹn giờ (không gửi khung thường) mỗi lần đổi cài đặt.
-<<<<<<< HEAD
 //     Máy đang tắt mà đang hẹn BẬT thì đổi cài đặt cũng gửi lại khung hẹn BẬT (aircon22).
-=======
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 //   - Sleep = cờ của remote: khi cờ bật, MỌI khung remote gửi (khung thường
 //     hoặc khung hẹn giờ) đều đi sau một khung kSleepCode. Bật/Tắt Sleep không
 //     ảnh hưởng hẹn giờ. Sleep chỉ có ở Auto và Cool.
 //   - Eco = khung 48-bit riêng, có Bật/Tắt tường minh. Eco chỉ có ở Cool.
-<<<<<<< HEAD
 //     Khung TẮT Eco mang mã quạt hiện tại ở 2 bit thấp byte cuối (xem coolix::eco).
 //   - Sleep và Eco loại trừ nhau: bật cái này thì máy tự tắt cái kia.
 //   - Bật Eco hoặc bật Sleep thì quạt về Auto. Tắt Eco/Sleep giữ mức quạt hiện tại.
@@ -39,22 +35,6 @@
 //     máy tự tắt. Bật Clean xóa hẹn giờ, Sleep, Eco, Turbo. Trong lúc Clean máy chỉ
 //     nhận nút Clean (dừng Clean, máy tắt hẳn), nút Nguồn (tắt) và nút Light; mọi lệnh
 //     khác bị từ chối. Cờ Clean mất khi khởi động lại ESP32.
-=======
-//   - Sleep và Eco loại trừ nhau: bật cái này thì máy tự tắt cái kia.
-//   - Đổi chế độ tự tắt Sleep và Eco trên máy (phải bật lại thủ công). Đổi nhiệt
-//     độ hoặc tốc độ quạt thì giữ Sleep, Eco và hẹn giờ.
-//   - Tắt máy xóa Sleep, Eco và hẹn giờ.
-//   - Swing = lệnh đảo trạng thái, không mang cài đặt.
-//   - Light = lệnh đảo đèn hiển thị, không mang cài đặt, phát được cả khi máy tắt
-//     (máy chỉ bíp). ESP32 không lưu trạng thái Light.
-//   - Turbo = lệnh đảo, ESP32 giữ cờ. Chỉ có ở Cool (máy đang bật). Bật Turbo tắt
-//     Sleep và Eco; ngược lại bật Sleep, Eco hoặc Clean tắt Turbo. Đổi nhiệt độ giữ
-//     Turbo; đổi chế độ hoặc tốc độ quạt, và tắt máy, xóa Turbo. Không ảnh hưởng hẹn giờ.
-//   - Clean = lệnh đảo, ESP32 giữ cờ (không lưu NVS). Chạy AC_CLEAN_DURATION_MS rồi
-//     máy tự tắt. Bật Clean xóa hẹn giờ, Sleep, Eco, Turbo. Trong lúc Clean máy chỉ
-//     nhận nút Clean (dừng Clean, máy tắt hẳn) và nút Nguồn (tắt); mọi lệnh khác
-//     bị từ chối. Cờ Clean mất khi khởi động lại ESP32.
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 //
 //  Các hàm set*() trả về nullptr nếu OK, hoặc chuỗi lỗi (HTTP 400) nếu không
 //  hợp lệ — không tự sửa giá trị sai.
@@ -138,26 +118,19 @@ class AcController {
     if (mode < coolix::kModeAuto || mode > coolix::kModeFan) return "Chế độ không hợp lệ (0-3).";
     if (fan < coolix::kFanAuto || fan > coolix::kFanHigh) return "Tốc độ quạt không hợp lệ (0-3).";
     if (temp < AC_TEMP_MIN || temp > AC_TEMP_MAX) return "Nhiệt độ ngoài khoảng 17-30°C.";
-<<<<<<< HEAD
     if (fan != st_.fan && (mode == coolix::kModeAuto || mode == coolix::kModeDry))
       return "Không đổi được tốc độ quạt ở chế độ Auto và Dry.";
-=======
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     if (mode != st_.mode) {
       // Máy tự tắt Sleep, Eco và Turbo khi đổi chế độ (kể cả sang chế độ có Sleep).
       st_.sleep = false;
       st_.eco = false;
       st_.turbo = false;
     }
-<<<<<<< HEAD
     if (fan != st_.fan) {
       // Đổi tốc độ quạt tắt Sleep và Turbo; Eco và hẹn giờ giữ nguyên.
       st_.sleep = false;
       st_.turbo = false;
     }
-=======
-    if (fan != st_.fan) st_.turbo = false;  // đổi tốc độ quạt tắt Turbo
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     st_.mode = static_cast<uint8_t>(mode);
     st_.fan = static_cast<uint8_t>(fan);
     st_.temp = static_cast<uint8_t>(temp);
@@ -192,10 +165,7 @@ class AcController {
     if (on) {
       st_.eco = false;
       st_.turbo = false;
-<<<<<<< HEAD
       st_.fan = coolix::kFanAuto;  // bật Sleep đặt quạt về Auto
-=======
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     }
     if (st_.power) sendState();
     save();
@@ -210,14 +180,9 @@ class AcController {
     if (on) {
       st_.sleep = false;
       st_.turbo = false;
-<<<<<<< HEAD
       st_.fan = coolix::kFanAuto;  // bật Eco đặt quạt về Auto
     }
     if (st_.power) send48(coolix::eco(currentState(), on, st_.fan), 1);
-=======
-    }
-    if (st_.power) send48(coolix::eco(currentState(), on), 1);
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     save();
     return nullptr;
   }
@@ -229,14 +194,8 @@ class AcController {
     return nullptr;
   }
 
-<<<<<<< HEAD
   // Đèn hiển thị: lệnh đảo, phát được cả khi máy tắt (máy chỉ bíp) và cả trong lúc Clean.
   const char* light() {
-=======
-  // Đèn hiển thị: lệnh đảo, phát được cả khi máy tắt (máy chỉ bíp).
-  const char* light() {
-    if (const char* e = rejectIfCleaning()) return e;
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     send48(coolix::wire(coolix::kLightCode), 1);
     return nullptr;
   }
@@ -285,11 +244,7 @@ class AcController {
   uint32_t clean_start_ms_ = 0;
 
   const char* rejectIfCleaning() const {
-<<<<<<< HEAD
     return st_.clean ? "Đang Clean: máy chỉ nhận nút Clean, Tắt nguồn và Light." : nullptr;
-=======
-    return st_.clean ? "Đang Clean: máy chỉ nhận nút Clean và Tắt nguồn." : nullptr;
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   }
 
   static bool valid(const AcState& s) {

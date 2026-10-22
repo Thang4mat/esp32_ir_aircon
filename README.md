@@ -8,16 +8,10 @@ thu thực tế từ remote.
 Hiện chỉ có project cho **ESP32 DevKit V1** (`controller/`). Bản ESP32-C3 SuperMini
 **chưa làm** vì chưa có board; các ghi chú về C3 ở cuối file chỉ để tham khảo.
 
-<<<<<<< HEAD
 > Firmware `controller/` ở bản trước (chưa có Light/Turbo/Clean) đã được **build bằng
 > PlatformIO, nạp lên ESP32 DevKit V1 và thử trên máy lạnh thật**: ESP32 phát tín hiệu đúng
 > như remote gốc, chưa thấy điều gì bất thường. Bản hiện tại (có Light/Turbo/Clean và các quy
 > luật quạt/Eco/Sleep mới) **chưa có ghi nhận thử trên máy thật**. Chi tiết xem mục "Đã kiểm chứng".
-=======
-> Firmware `controller/` đã được **build bằng PlatformIO, nạp lên ESP32 DevKit V1 và
-> thử trên máy lạnh thật**: ESP32 phát tín hiệu đúng như remote gốc, chưa thấy điều
-> gì bất thường. Chi tiết xem mục "Đã kiểm chứng trên máy thật" bên dưới.
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 
 ## Bước 1 — Xác minh giao thức (nếu đổi remote/máy)
 
@@ -44,12 +38,8 @@ Sửa `src/secrets.h`, điền đúng tên và mật khẩu Wi-Fi nhà. Quá 30 
 
 ESP32 luôn dùng IP tĩnh, cấu hình trong `src/config.h` (`WIFI_STATIC_IP`, `WIFI_GATEWAY`,
 `WIFI_SUBNET`). Mặc định `192.168.6.200`, gateway `192.168.6.1`, subnet `255.255.255.0`.
-<<<<<<< HEAD
 Router của dự án không cho đặt IP ngoài dải DHCP, nên `192.168.6.200` nằm trong dải; IP này hoạt động
 tốt. Khi đổi mạng, đổi cho khớp mạng mới và chọn IP không trùng thiết bị khác.
-=======
-Đổi cho khớp mạng nhà, và chọn IP nằm ngoài dải DHCP của router để không trùng thiết bị khác.
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 Không đặt được IP tĩnh thì ESP32 báo lỗi trên Serial Monitor rồi tự khởi động lại.
 
 ## Bước 3 — Lắp mạch phát IR & nạp firmware chính
@@ -109,7 +99,6 @@ Suy ra từ tín hiệu thu thực tế:
 - Khi máy đang tắt, đổi mode/fan/temp chỉ được lưu, không phát IR (mọi khung
   trạng thái đều ngầm bật máy). Áp dụng khi bấm Bật.
 - Hẹn giờ = một khung 48-bit mang theo cả cài đặt hiện tại. Đổi mode/fan/temp
-<<<<<<< HEAD
   khi đang hẹn giờ gửi lại khung hẹn giờ với cài đặt mới (giữ hẹn giờ), kể cả khi máy đang
   tắt mà đang hẹn BẬT. Một khung hẹn TẮT mang theo cả hẹn BẬT.
 - Sleep: nếu bật, khung `B2E003` đi trước mọi khung remote gửi (khung thường
@@ -136,27 +125,6 @@ Suy ra từ tín hiệu thu thực tế:
   tự tắt: `update()` trong `loop()` đặt cờ Clean = tắt và nguồn = tắt. Bật Clean xóa hẹn
   giờ BẬT/TẮT, Sleep, Eco, Turbo. Dừng Clean giữa chừng (Tắt Clean) thì máy tắt hẳn. Trong
   lúc Clean máy chỉ nhận nút Clean, nút Nguồn (tắt) và nút Light; ESP32 từ chối (HTTP 400) mọi lệnh khác.
-=======
-  khi đang hẹn giờ gửi lại khung hẹn giờ với cài đặt mới (giữ hẹn giờ). Một khung
-  hẹn TẮT mang theo cả hẹn BẬT.
-- Sleep: nếu bật, khung `B2E003` đi trước mọi khung remote gửi (khung thường hoặc
-  khung hẹn giờ). Bật/Tắt Sleep không ảnh hưởng hẹn giờ. Chỉ có ở Auto và Cool.
-- Eco chỉ có ở Cool. Đổi nhiệt độ hoặc tốc độ quạt giữ Sleep, Eco, hẹn giờ.
-- Sleep và Eco loại trừ nhau: bật cái này thì máy tự tắt cái kia.
-- Đổi **chế độ** tự tắt Sleep và Eco (phải bật lại thủ công), giữ hẹn giờ.
-- Tắt máy xóa Sleep, Eco và hẹn giờ. Bấm Bật (khung thường) cũng hủy hẹn giờ.
-- Swing chỉ gửi lệnh đảo, không lưu trạng thái (ESP32 không đọc được máy).
-- Light (`B5F5A5`): lệnh đảo đèn hiển thị, không lưu trạng thái. Phát được cả khi máy
-  tắt (máy chỉ bíp).
-- Turbo (`B5F5A2`): lệnh đảo, ESP32 giữ cờ và chỉ phát khi cờ đổi. Chỉ ở Cool và khi máy
-  đang bật. Bật Turbo tắt Sleep và Eco; bật Sleep, Eco hoặc Clean tắt Turbo. Đổi nhiệt độ
-  giữ Turbo; đổi chế độ hoặc tốc độ quạt, và tắt máy, xóa Turbo. Không ảnh hưởng hẹn giờ.
-- Clean (`B5F5AA`): lệnh đảo, ESP32 giữ cờ (không lưu NVS) và chỉ phát khi cờ đổi. Chỉ khi
-  máy đang bật. Chạy 30 phút (`AC_CLEAN_DURATION_MS`, ESP32 tự đếm bằng `millis()`) rồi máy
-  tự tắt: `update()` trong `loop()` đặt cờ Clean = tắt và nguồn = tắt. Bật Clean xóa hẹn
-  giờ BẬT/TẮT, Sleep, Eco, Turbo. Dừng Clean giữa chừng (Tắt Clean) thì máy tắt hẳn. Trong
-  lúc Clean máy chỉ nhận nút Clean và nút Nguồn (tắt); ESP32 từ chối (HTTP 400) mọi lệnh khác.
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 
 ## API (GET, trả về state JSON hoặc HTTP 400 kèm lý do)
 
@@ -164,27 +132,16 @@ Suy ra từ tín hiệu thu thực tế:
 |---|---|
 | `/api/state` | — |
 | `/api/power` | `on` = 0/1 |
-<<<<<<< HEAD
 | `/api/climate` | `mode` 0-3 (Auto/Cool/Dry/Fan), `fan` 0-3 (Auto/Thấp/Vừa/Cao), `temp` 17-30. Ở Auto/Dry `fan` phải bằng mức đang lưu |
-=======
-| `/api/climate` | `mode` 0-3 (Auto/Cool/Dry/Fan), `fan` 0-3 (Auto/Thấp/Vừa/Cao), `temp` 17-30 |
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 | `/api/timer` | `on`, `off` = số phút (0, 30..600 bước 30, 660..1440 bước 60) |
 | `/api/sleep` | `on` = 0/1 (bật: chỉ khi máy đang chạy ở Auto/Cool) |
 | `/api/eco` | `on` = 0/1 (bật: chỉ khi máy đang chạy ở Cool) |
 | `/api/turbo` | `on` = 0/1 (bật: chỉ khi máy đang chạy ở Cool) |
 | `/api/clean` | `on` = 0/1 (bật: chỉ khi máy đang chạy; tắt: máy tắt hẳn) |
-<<<<<<< HEAD
 | `/api/light` | — (lệnh đảo; phát được cả khi máy tắt và khi Clean) |
 | `/api/swing` | — |
 
 Trong lúc Clean, mọi đường dẫn trên trừ `/api/state`, `/api/clean`, `/api/light` và `/api/power?on=0`
-=======
-| `/api/light` | — (lệnh đảo; phát được cả khi máy tắt) |
-| `/api/swing` | — |
-
-Trong lúc Clean, mọi đường dẫn trên trừ `/api/state`, `/api/clean` và `/api/power?on=0`
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 đều trả HTTP 400. State JSON có thêm `turbo` và `clean`.
 
 Tham số thiếu, không phải số hoặc ngoài khoảng đều bị từ chối, không tự sửa.
@@ -201,27 +158,18 @@ Bộ test không cần ESP32 hay PlatformIO. Nó gồm:
 
 - đối chiếu từng byte mã khung trong `coolix_frames.h` với tín hiệu thu thật của remote;
 - kiểm tra logic chọn khung IR trong `ac_controller.h` (Sleep, Eco, Turbo, Clean, Light,
-<<<<<<< HEAD
   quạt, hẹn giờ, đổi chế độ, tắt máy, Swing, ca lỗi); Clean hết giờ được kiểm bằng đồng hồ giả
   `g_millis` trong `test/stub/Arduino.h`, kể cả khi `millis()` tràn số;
 - kiểm tra lưu/nạp NVS (stub `Preferences` giữ dữ liệu giữa các lần khởi tạo).
 
 Kết quả mong đợi: `321/321 dat` (người dùng đã chạy xác nhận). Nếu file `run.sh` mất quyền thực thi
 (sau khi giải nén zip), chạy `sh test/run.sh`. Chạy lại sau mỗi lần sửa `coolix_frames.h` hoặc
-=======
-  hẹn giờ, đổi chế độ, tắt máy, Swing, ca lỗi); Clean hết giờ được kiểm bằng đồng hồ giả
-  `g_millis` trong `test/stub/Arduino.h`, kể cả khi `millis()` tràn số;
-- kiểm tra lưu/nạp NVS (stub `Preferences` giữ dữ liệu giữa các lần khởi tạo).
-
-Kết quả mong đợi: `216/216 dat`. Chạy lại sau mỗi lần sửa `coolix_frames.h` hoặc
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 `ac_controller.h`. Bộ test chỉ kiểm tra logic mã hoá và chọn khung, KHÔNG kiểm tra thời
 gian xung, mạch phát hay Wi-Fi.
 
 ## Đã kiểm chứng
 
 - **Remote thật**: hành vi của máy lạnh (Sleep, Eco, hẹn giờ, đổi chế độ/nhiệt/quạt, tắt
-<<<<<<< HEAD
   máy, Light/Turbo/Clean) đã được thu và đối chiếu bằng remote thật, qua `capture/`
   (`aircon.txt` ... `aircon27.txt`).
 - **Trên máy thật bằng ESP32 DevKit V1**: bản firmware trước khi thêm Light/Turbo/Clean
@@ -242,50 +190,16 @@ gian xung, mạch phát hay Wi-Fi.
   Auto), Eco (khung tắt mang mã quạt `83C0`–`83C3`, `83D0`, `83D2`; đổi quạt/nhiệt trong Eco), chuyển
   Eco → Sleep → Eco, Turbo rồi Eco/Sleep, hẹn TẮT khi Turbo, đổi chế độ khi đang Sleep/Eco/hẹn giờ,
   tắt máy, Swing, Light trong Clean, NVS và các ca báo lỗi.
-=======
-  máy) đã được thu và đối chiếu bằng remote thật, qua `capture/`.
-- **Trên máy thật bằng ESP32 DevKit V1**: bản firmware trước khi thêm Light/Turbo/Clean
-  đã build, nạp và thử. ESP32 phát tín hiệu đến máy lạnh giống remote, chưa thấy điều gì
-  bất thường. (Chưa có ghi nhận riêng cho từng tình huống; các tình huống cụ thể bên dưới
-  được kiểm bằng test trên PC.) **Light, Turbo, Clean mới thêm: chưa build, chưa nạp, chưa
-  thử trên máy thật qua ESP32.**
-- **Remote thật cho Light/Turbo/Clean**: mã nút thu ở `aircon.txt` (giải mã `rawData` khớp
-  từng byte với `coolix::wire()`). Các quy luật Turbo và Clean ở trên (chỉ ở Cool, tắt/hủy
-  lẫn nhau, Clean 30 phút, dừng Clean máy tắt hẳn, máy tắt thì Turbo/Clean không phản ứng
-  còn Light chỉ bíp) do người dùng thử trực tiếp trên remote và máy lạnh.
-- **Trên PC**: đối chiếu từng byte khung IR với tín hiệu thu: bảng nhiệt Cool 17–30,
-  Mode/Fan, hẹn BẬT và hẹn TẮT ở các mốc 0.5–24 giờ, hẹn giờ ở chế độ Dry, hẹn BẬT + TẮT
-  cùng lúc (TẮT 0.5 giờ + BẬT 1 giờ = `B24DA15ED083`), Sleep, Eco, chuyển
-  Eco → Sleep → Eco (khung Eco gửi riêng, không có `B2E003` đi trước, thu từ remote ở
-  `aircon11.txt`), đổi chế độ khi đang Sleep/Eco/hẹn giờ, tắt máy, Swing, NVS và các ca
-  báo lỗi.
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 
 ## Giả định chưa có tín hiệu thu
 
 Firmware đang làm như dưới đây dựa trên suy luận, chưa có tín hiệu thu từ remote xác nhận.
-<<<<<<< HEAD
 Mỗi mục đều có ca test hoặc ghi chú trong code; nếu thu được tín hiệu khác thì sửa code và test.
 
 - **Turbo rồi Eco**: quạt về Auto (khung bật Eco không mang mã quạt, LED máy không cho biết).
 - **Hẹn BẬT + TẮT cùng lúc**: chỉ thu 2 tổ hợp (`aircon5`, `aircon11`); hiệu lực thật của cả hai
   hẹn trên máy chưa ghi nhận.
 - **Thời lượng Clean 20 phút** là con số người dùng đo trên remote; ESP32 tự đếm bằng
-=======
-Mỗi mục đều có ca test ghi rõ là giả định; nếu thu được tín hiệu khác thì sửa code và test.
-
-- **Máy đang tắt, đang hẹn BẬT, rồi đổi nhiệt độ/chế độ**: firmware gửi lại khung hẹn BẬT
-  với cài đặt mới. `aircon10.txt` mục 3 chỉ mô tả bằng lời (hẹn giờ không bị hủy), không
-  có khung thu.
-- **Tốc độ quạt Thấp/Vừa/Cao ở Auto, Dry, Fan**: `aircon.txt` chỉ thu các mức quạt ở Cool.
-  Các chế độ khác dùng cùng bảng mã quạt.
-- **Nhiệt độ ở Auto và Dry** ngoài 26°C: dùng cùng bảng mã nhiệt với Cool (chỉ thu 26°C).
-- **Đặt hẹn giờ khi đang Turbo** giữ Turbo: suy ra từ việc đổi nhiệt độ giữ Turbo (cùng là
-  khung trạng thái giữ nguyên chế độ/quạt). Chưa có tín hiệu hay thử riêng ca này.
-- **Trong lúc Clean, ESP32 từ chối cả Bật nguồn, Swing, Light**: suy ra từ việc máy chỉ
-  nhận nút Clean và nút Nguồn (tắt). Chưa thử riêng từng nút này trong lúc Clean.
-- **Thời lượng Clean 30 phút** là con số người dùng đo trên remote; ESP32 tự đếm bằng
->>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   `millis()`, không nhận tín hiệu nào từ máy. Nếu máy chạy lệch vài giây hoặc vài phút thì
   cờ Clean trên ESP32 lệch theo.
 
