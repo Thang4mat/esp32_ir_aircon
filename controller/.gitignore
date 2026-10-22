@@ -1,5 +1,2 @@
-.pio
+.pio/
 src/secrets.h
-.vscode
-include
-lib
