@@ -49,6 +49,7 @@ int main() {
     eq(state(kModeDry,kFanAuto,26), 0xB21FD4, "state() Dry");
     eq(state(kModeAuto,kFanAuto,26), 0xB21FD8, "state() Auto");
     eq(state(kModeFan,kFanAuto,26), 0xB2BFE4, "state() Fan");
+<<<<<<< HEAD
     // Auto/Dry luôn mã quạt 000 dù mức quạt lưu là gì (aircon13: Dry B21F94, Auto B21F98 với quạt Cao)
     eq(state(kModeDry,kFanHigh,27), 0xB21F94, "state() Dry quạt lưu Cao vẫn mã 000");
     eq(state(kModeAuto,kFanHigh,27), 0xB21F98, "state() Auto quạt lưu Cao vẫn mã 000");
@@ -57,6 +58,8 @@ int main() {
     eq(state(kModeFan,kFanLow,25), 0xB29FE4, "state() Fan quạt Thấp");
     eq(state(kModeFan,kFanMed,25), 0xB25FE4, "state() Fan quạt Vừa");
     eq(state(kModeFan,kFanHigh,25), 0xB23FE4, "state() Fan quạt Cao");
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     eq(wire(0xB2BFD0), 0xB24DBF40D02FULL, "wire(B2BFD0)");
     eq(wire(kSleepCode), 0xB24DE01F03FCULL, "wire(B2E003)");
     eq(wire(kOffCode), 0xB24D7B84E01FULL, "wire(B27BE0)");
@@ -69,6 +72,7 @@ int main() {
     eq(timerOff(s,30,60), 0xB24DA15ED083ULL, "timerOff 0.5h + timerOn 1h");
     eq(timerOff(s,600,300), 0xB24DA758D193ULL, "timerOff 10h + timerOn 5h");
     eq(timerOn(s30,30), 0xB24DBF40B381ULL, "timerOn 0.5h @30C"); eq(timerOff(s30,30,0), 0xB24DA15EB0FFULL, "timerOff 0.5h @30C");
+<<<<<<< HEAD
     eq(eco(s30,true,kFanAuto), 0xB54AF50A82B0ULL, "eco bật @30C"); eq(eco(s30,false,kFanAuto), 0xB54AF50A83B0ULL, "eco tắt @30C");
     eq(eco(s,true,kFanAuto), 0xB54AF50A82D0ULL, "eco bật @26C");  eq(eco(s,false,kFanAuto), 0xB54AF50A83D0ULL, "eco tắt @26C");
     // Eco BẬT không mang mã quạt; Eco TẮT mang mã quạt ở 2 bit thấp (aircon19, aircon27)
@@ -78,6 +82,10 @@ int main() {
     eq(eco(s25,false,kFanLow), 0xB54AF50A83C1ULL, "eco tắt quạt Thấp");
     eq(eco(s25,false,kFanMed), 0xB54AF50A83C2ULL, "eco tắt quạt Vừa");
     eq(eco(s25,false,kFanHigh), 0xB54AF50A83C3ULL, "eco tắt quạt Cao");
+=======
+    eq(eco(s30,true), 0xB54AF50A82B0ULL, "eco bật @30C"); eq(eco(s30,false), 0xB54AF50A83B0ULL, "eco tắt @30C");
+    eq(eco(s,true), 0xB54AF50A82D0ULL, "eco bật @26C");  eq(eco(s,false), 0xB54AF50A83D0ULL, "eco tắt @26C");
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     const uint32_t sd = state(kModeDry, kFanAuto, 26);
     eq(timerOn(sd,300), 0xB24D1FE0D793ULL, "Dry timerOn 5h"); eq(timerOff(sd,600,0), 0xB24D07F8D5FFULL, "Dry timerOff 10h");
   }
@@ -88,6 +96,7 @@ int main() {
     for (int t = 17; t <= 30; t++) { r.clear(); r.ac.setClimate(1, 0, t);
       CHECK(seq(r.ir, {{w24(code[t-17]),48,1}}), "bảng nhiệt Cool"); } }
 
+<<<<<<< HEAD
   // 1b. Bảng nhiệt Auto và Dry 17-30 (aircon23.txt)
   { const uint8_t autoCode[14] = {0x08,0x18,0x38,0x28,0x68,0x78,0x58,0x48,0xC8,0xD8,0x98,0x88,0xA8,0xB8};
     const uint8_t dryCode[14]  = {0x04,0x14,0x34,0x24,0x64,0x74,0x54,0x44,0xC4,0xD4,0x94,0x84,0xA4,0xB4};
@@ -98,16 +107,22 @@ int main() {
     for (int t = 17; t <= 30; t++) { d.clear(); d.ac.setClimate(2, 0, t);
       CHECK(seq(d.ir, {{w24(0xB21F00u | dryCode[t-17]),48,1}}), "bảng nhiệt Dry"); } }
 
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // 2. Mode/Fan (aircon.txt)
   { Rig r; r.ac.setClimate(1,0,26); r.ac.setPower(true);
     r.clear(); r.ac.setClimate(1,1,26); CHECK(seq(r.ir,{{w24(0xB29FD0),48,1}}), "Cool quạt Thấp B29FD0");
     r.clear(); r.ac.setClimate(1,2,26); CHECK(seq(r.ir,{{w24(0xB25FD0),48,1}}), "Cool quạt Vừa B25FD0");
     r.clear(); r.ac.setClimate(1,3,26); CHECK(seq(r.ir,{{w24(0xB23FD0),48,1}}), "Cool quạt Cao B23FD0");
+<<<<<<< HEAD
     r.clear(); r.ac.setClimate(1,0,26); CHECK(seq(r.ir,{{w24(0xB2BFD0),48,1}}), "Cool quạt Auto B2BFD0");
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     r.clear(); r.ac.setClimate(2,0,26); CHECK(seq(r.ir,{{w24(0xB21FD4),48,1}}), "Dry B21FD4");
     r.clear(); r.ac.setClimate(0,0,26); CHECK(seq(r.ir,{{w24(0xB21FD8),48,1}}), "Auto B21FD8");
     r.clear(); r.ac.setClimate(3,0,26); CHECK(seq(r.ir,{{w24(0xB2BFE4),48,1}}), "Fan B2BFE4"); }
 
+<<<<<<< HEAD
   // 2b. Quạt ở chế độ Fan (aircon23.txt)
   { Rig r; r.ac.setClimate(3,0,25); r.ac.setPower(true);
     r.clear(); r.ac.setClimate(3,1,25); CHECK(seq(r.ir,{{w24(0xB29FE4),48,1}}), "Fan quạt Thấp B29FE4");
@@ -137,6 +152,8 @@ int main() {
           "từ Cool sang Dry kèm đổi quạt lỗi");
     CHECK(c.ac.setClimate(0,1,26) == nullptr, "sang Auto giữ nguyên mức quạt (Web UI gửi kèm quạt hiện tại) hợp lệ"); }
 
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // 3. Hẹn BẬT (aircon3.txt, Cool 26) và hẹn BẬT ở 30°C (aircon2.txt)
   { const int mins[9] = {30,60,90,120,300,600,660,720,1440};
     const uint8_t last[9] = {0x81,0x83,0x85,0x87,0x93,0xA7,0xAB,0xAF,0xDF};
@@ -162,6 +179,7 @@ int main() {
     r.clear(); r.ac.setTimers(0,300); CHECK(seq(r.ir,{{0xB24D13ECD4FFULL,48,1}}), "Dry hẹn TẮT 5h");
     r.clear(); r.ac.setTimers(0,600); CHECK(seq(r.ir,{{0xB24D07F8D5FFULL,48,1}}), "Dry hẹn TẮT 10h"); }
 
+<<<<<<< HEAD
   // 5b. Hẹn giờ ở Auto và Fan (aircon18.txt: hẹn BẬT; aircon24.txt: hẹn TẮT)
   { Rig a; a.ac.setClimate(0,0,25); a.ac.setPower(true); a.clear(); a.ac.setTimers(30,0);
     CHECK(seq(a.ir,{{0xB24D1FE0CB81ULL,48,1}}), "Auto 25C hẹn BẬT 0.5h = B24D1FE0CB81 (aircon18)");
@@ -172,6 +190,8 @@ int main() {
     Rig f2; f2.ac.setClimate(3,1,25); f2.ac.setPower(true); f2.clear(); f2.ac.setTimers(0,60);
     CHECK(seq(f2.ir,{{0xB24D837CE4FFULL,48,1}}), "Fan quạt Thấp hẹn TẮT 1h = B24D837CE4FF (aircon24)"); }
 
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // 6. Hẹn BẬT 5h + TẮT 10h (aircon5.txt)
   { Rig r; coolOn(r); r.ac.setTimers(300,0); r.clear(); r.ac.setTimers(300,600);
     CHECK(seq(r.ir,{{0xB24DA758D193ULL,48,1}}), "BẬT 5h + TẮT 10h");
@@ -179,7 +199,11 @@ int main() {
     r.clear(); r.ac.setTimers(300,0); CHECK(seq(r.ir,{{0xB24DBF40D393ULL,48,1}}), "hủy TẮT, còn BẬT 5h");
     r.clear(); r.ac.setTimers(0,0);   CHECK(seq(r.ir,{{w24(0xB2BFD0),48,1}}), "hủy cả hai = khung thường"); }
 
+<<<<<<< HEAD
   // 7. Hẹn TẮT 0.5h + BẬT 1h (aircon11.txt)
+=======
+  // 7. Hẹn TẮT 0.5h + BẬT 1h (aircon11.txt) — mục MỚI
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   { Rig r; coolOn(r); r.ac.setTimers(60, 30);
     CHECK(seq(r.ir,{{0xB24DA15ED083ULL,48,1}}), "TẮT 0.5h + BẬT 1h = B24DA15ED083 (aircon11)"); }
 
@@ -188,7 +212,11 @@ int main() {
     CHECK(seq(r.ir,{{0xB24DA75890FFULL,48,1}}), "tăng nhiệt giữ hẹn TẮT 2h = B24DA75890FF");
     CHECK(r.ac.state().off_timer == 120, "hẹn giờ còn sau đổi nhiệt"); }
 
+<<<<<<< HEAD
   // 9. Sleep (aircon.txt, aircon7/9/10)
+=======
+  // 9. Sleep (aircon.txt, aircon7/9/10) 
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   { Rig r; coolOn(r); r.ac.setSleep(true);
     CHECK(seq(r.ir,{{w24(0xB2E003),48,0},{w24(0xB2BFD0),48,1}}), "Bật Sleep = B2E003 + B2BFD0 x2");
     r.clear(); r.ac.setClimate(1,0,27);   // aircon7: tăng nhiệt giữ Sleep
@@ -196,6 +224,7 @@ int main() {
     r.clear(); r.ac.setSleep(false);
     CHECK(seq(r.ir,{{w24(0xB2BF90),48,1}}), "Tắt Sleep = khung thường"); }
 
+<<<<<<< HEAD
   // 9b. Sleep và tốc độ quạt (aircon15/16/17/18/25)
   { // aircon18: quạt Thấp -> bật Sleep: quạt về Auto; tắt Sleep giữ Auto; tăng nhiệt
     Rig r; r.ac.setClimate(1,1,25); r.ac.setPower(true); r.clear(); r.ac.setSleep(true);
@@ -229,6 +258,8 @@ int main() {
     r.clear(); r.ac.setClimate(1,0,28);
     CHECK(seq(r.ir,{{w24(0xB2BF80),48,1}}), "[aircon17] tăng nhiệt B2BF80"); }
 
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // 10. Sleep + hẹn TẮT 2h (aircon9/10.txt)
   { Rig r; coolOn(r); r.ac.setTimers(0,120); r.clear(); r.ac.setSleep(true);
     CHECK(seq(r.ir,{{w24(0xB2E003),48,0},{0xB24DA758D0FFULL,48,1}}), "Sleep + hẹn TẮT = B2E003 + B24DA758D0FF x2");
@@ -251,6 +282,7 @@ int main() {
     CHECK(seq(r.ir,{{w24(0xB2BF90),48,1}}), "Eco + tăng nhiệt = B2BF90");
     CHECK(r.ac.state().eco, "Eco còn sau đổi nhiệt"); }
 
+<<<<<<< HEAD
   // 12b. Eco và tốc độ quạt (aircon12/14/19/20/21/27)
   { // Bật Eco đặt quạt về Auto, khung BẬT không mang quạt (aircon12: quạt Thấp, Eco B54AF50A82D0, tăng nhiệt B2BF90)
     Rig r; r.ac.setClimate(1,1,26); r.ac.setPower(true); r.clear(); r.ac.setEco(true);
@@ -289,6 +321,9 @@ int main() {
     CHECK(seq(r.ir,{{w24(0xB2BFC0),48,1}}), "[aircon20] chọn lại Auto rồi tắt/bật máy = B2BFC0"); }
 
   // 13. aircon11.txt: Eco -> Sleep -> Eco
+=======
+  // 13. MỚI (aircon11.txt): Eco -> Sleep -> Eco
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   { Rig r; coolOn(r);
     r.ac.setEco(true);
     CHECK(seq(r.ir,{{0xB54AF50A82D0ULL,48,1}}), "[aircon11] Bật Eco");
@@ -363,6 +398,7 @@ int main() {
     Rig bad; { Preferences p; p.begin("ac", false); p.putBool("power", true); p.putUChar("temp", 99); }
     IRsend ir5; AcController b5; b5.begin(ir5);
     CHECK(!b5.state().power && b5.state().temp == AC_TEMP_DEFAULT && b5.state().mode == coolix::kModeAuto,
+<<<<<<< HEAD
           "NVS hỏng (temp=99) -> dùng mặc định cả bộ, không dùng nửa vời");
     Rig w; w.ac.setClimate(1,3,26); w.ac.setClimate(2,3,26);
     IRsend ir6; AcController b6; b6.begin(ir6);
@@ -383,6 +419,17 @@ int main() {
     a.clear(); a.ac.setClimate(1,1,25);
     CHECK(seq(a.ir,{{0xB24D9F60C383ULL,48,1}}), "[aircon22] giảm độ = B24D9F60C383");
     CHECK(!a.ac.state().power && a.ac.state().on_timer == 60, "[aircon22] máy vẫn tắt, hẹn BẬT còn"); }
+=======
+          "NVS hỏng (temp=99) -> dùng mặc định cả bộ, không dùng nửa vời"); }
+
+  // 20. GIẢ ĐỊNH, CHƯA CÓ TÍN HIỆU THU: máy tắt đang hẹn BẬT, đổi nhiệt -> gửi lại khung hẹn BẬT.
+  //     (aircon10.txt mục 3 chỉ mô tả bằng lời.) Nếu sau này thu được tín hiệu khác thì sửa ca này.
+  { Rig r; r.ac.setClimate(1,0,26); r.ac.setTimers(60,0);
+    CHECK(seq(r.ir,{{0xB24DBF40D383ULL,48,1}}), "máy tắt + hẹn BẬT 1h = B24DBF40D383");
+    r.clear(); r.ac.setClimate(1,0,27);
+    CHECK(seq(r.ir,{{0xB24DBF409383ULL,48,1}}), "[giả định] máy tắt + hẹn BẬT, tăng nhiệt = B24DBF409383");
+    CHECK(!r.ac.state().power && r.ac.state().on_timer == 60, "máy vẫn tắt, hẹn BẬT còn"); }
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 
   // 21. Light (aircon.txt: B5F5A5): lệnh đảo, phát được cả khi máy tắt, không đổi trạng thái
   { Rig r;   // máy tắt
@@ -408,7 +455,11 @@ int main() {
     const int modes[3] = {0, 2, 3};
     for (int i = 0; i < 3; i++) { Rig b; b.ac.setClimate(modes[i],0,26); b.ac.setPower(true); b.clear();
       CHECK(b.ac.setTurbo(true) != nullptr && b.ir.log.empty() && !b.ac.state().turbo, "Turbo ngoài Cool lỗi"); } }
+<<<<<<< HEAD
   // Bật Turbo tắt Sleep/Eco; bật Sleep/Eco tắt Turbo (aircon27 mục 2, aircon25)
+=======
+  // Bật Turbo tắt Sleep/Eco; bật Sleep/Eco tắt Turbo
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   { Rig r; coolOn(r); r.ac.setSleep(true); r.clear(); r.ac.setTurbo(true);
     CHECK(seq(r.ir, {{0xB54AF50AA25DULL,48,1}}), "Turbo sau Sleep: chỉ khung Turbo, không có B2E003");
     CHECK(r.ac.state().turbo && !r.ac.state().sleep && !r.ac.state().eco, "Bật Turbo tắt Sleep");
@@ -419,18 +470,22 @@ int main() {
     CHECK(seq(e.ir, {{0xB54AF50AA25DULL,48,1}}) && e.ac.state().turbo && !e.ac.state().eco, "Bật Turbo tắt Eco");
     e.clear(); e.ac.setEco(true);
     CHECK(seq(e.ir, {{0xB54AF50A82D0ULL,48,1}}) && e.ac.state().eco && !e.ac.state().turbo, "Bật Eco tắt Turbo"); }
+<<<<<<< HEAD
   // aircon25: Turbo rồi Sleep (quạt Thấp): B2E003 + B2BFC0; Turbo rồi Eco: 82C0
   { Rig r; r.ac.setClimate(1,1,25); r.ac.setPower(true); r.ac.setTurbo(true); r.clear(); r.ac.setSleep(true);
     CHECK(seq(r.ir, {{w24(0xB2E003),48,0},{w24(0xB2BFC0),48,1}}), "[aircon25] Turbo rồi Sleep (quạt Thấp) = B2E003 + B2BFC0");
     CHECK(!r.ac.state().turbo && r.ac.state().fan == coolix::kFanAuto, "[aircon25] Sleep tắt Turbo, quạt Auto");
     Rig e; e.ac.setClimate(1,1,25); e.ac.setPower(true); e.ac.setTurbo(true); e.clear(); e.ac.setEco(true);
     CHECK(seq(e.ir, {{0xB54AF50A82C0ULL,48,1}}) && !e.ac.state().turbo && e.ac.state().eco, "[aircon25] Turbo rồi Eco = B54AF50A82C0"); }
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // Đổi nhiệt giữ Turbo; đổi quạt hoặc chế độ tắt Turbo
   { Rig r; coolOn(r); r.ac.setTurbo(true); r.clear(); r.ac.setClimate(1,0,27);
     CHECK(seq(r.ir, {{w24(0xB2BF90),48,1}}) && r.ac.state().turbo, "Turbo + tăng nhiệt: khung thường, giữ Turbo");
     r.ac.setClimate(1,0,27); CHECK(r.ac.state().turbo, "đặt lại cùng quạt/chế độ: giữ Turbo");
     r.ac.setClimate(1,1,27); CHECK(!r.ac.state().turbo, "đổi quạt tắt Turbo");
     Rig m; coolOn(m); m.ac.setTurbo(true); m.ac.setClimate(2,0,26); CHECK(!m.ac.state().turbo, "đổi chế độ sang Dry tắt Turbo");
+<<<<<<< HEAD
     Rig a; coolOn(a); a.ac.setTurbo(true); a.ac.setClimate(0,0,26); CHECK(!a.ac.state().turbo, "đổi chế độ sang Auto tắt Turbo");
     // Bật Turbo không đổi quạt
     Rig q; q.ac.setClimate(1,1,25); q.ac.setPower(true); q.ac.setTurbo(true);
@@ -442,6 +497,16 @@ int main() {
     Rig q; q.ac.setClimate(1,1,25); q.ac.setPower(true); q.ac.setTurbo(true); q.clear(); q.ac.setTimers(0,60);
     CHECK(seq(q.ir, {{0xB24D837CC0FFULL,48,1}}), "[aircon26] hẹn TẮT 1h khi Turbo (quạt Thấp 25C) = B24D837CC0FF");
     CHECK(q.ac.state().turbo && q.ac.state().off_timer == 60, "[aircon26/27] đặt hẹn giờ khi Turbo giữ Turbo"); }
+=======
+    Rig a; coolOn(a); a.ac.setTurbo(true); a.ac.setClimate(0,0,26); CHECK(!a.ac.state().turbo, "đổi chế độ sang Auto tắt Turbo"); }
+  // Turbo không ảnh hưởng hẹn giờ
+  { Rig r; coolOn(r); r.ac.setTimers(0,120); r.clear(); r.ac.setTurbo(true);
+    CHECK(seq(r.ir, {{0xB54AF50AA25DULL,48,1}}) && r.ac.state().off_timer == 120, "bật Turbo khi hẹn TẮT: chỉ khung Turbo, giữ hẹn giờ");
+    r.ac.setTurbo(false); CHECK(r.ac.state().off_timer == 120, "tắt Turbo giữ hẹn giờ");
+    // SUY RA từ ca đổi nhiệt (khung trạng thái cùng chế độ/quạt giữ Turbo), chưa có tín hiệu riêng:
+    Rig q; coolOn(q); q.ac.setTurbo(true); q.ac.setTimers(0,60);
+    CHECK(q.ac.state().turbo, "[suy ra] đặt hẹn giờ khi Turbo giữ Turbo"); }
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // Tắt máy xóa Turbo; bật lại không còn Turbo
   { Rig r; coolOn(r); r.ac.setTurbo(true); r.ac.setPower(false);
     CHECK(!r.ac.state().turbo, "tắt máy xóa Turbo");
@@ -449,7 +514,11 @@ int main() {
     CHECK(seq(r.ir, {{w24(0xB2BFD0),48,1}}) && !r.ac.state().turbo, "bật lại: khung thường, không còn Turbo"); }
 
   // 23. Clean (aircon.txt: B5F5AA; quy luật do người dùng thử trên remote)
+<<<<<<< HEAD
   CHECK(AC_CLEAN_DURATION_MS == 20UL * 60UL * 1000UL, "Clean chạy 20 phút (người dùng đo lại trên remote, aircon26)");
+=======
+  CHECK(AC_CLEAN_DURATION_MS == 30UL * 60UL * 1000UL, "Clean chạy 30 phút (người dùng đo trên remote)");
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   { Rig a; CHECK(a.ac.setClean(true) != nullptr && a.ir.log.empty() && !a.ac.state().clean, "Clean khi máy tắt lỗi");
     Rig r; coolOn(r);
     CHECK(r.ac.setClean(true) == nullptr && seq(r.ir, {{0xB54AF50AAA55ULL,48,1}}), "Bật Clean = B5F5AA x2");
@@ -462,7 +531,11 @@ int main() {
     CHECK(s.on_timer == 0 && s.off_timer == 0 && !s.sleep && s.clean, "Clean xóa hẹn BẬT/TẮT và Sleep");
     Rig e; coolOn(e); e.ac.setEco(true); e.ac.setClean(true); CHECK(!e.ac.state().eco, "Clean xóa Eco");
     Rig t; coolOn(t); t.ac.setTurbo(true); t.ac.setClean(true); CHECK(!t.ac.state().turbo, "Clean xóa Turbo"); }
+<<<<<<< HEAD
   // Trong lúc Clean mọi lệnh khác (trừ Light) bị từ chối, không phát IR, không đổi trạng thái
+=======
+  // Trong lúc Clean mọi lệnh khác bị từ chối, không phát IR, không đổi trạng thái
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   { Rig r; coolOn(r); r.ac.setClean(true); r.clear();
     CHECK(r.ac.setPower(true) != nullptr, "Clean: Bật nguồn bị từ chối");
     CHECK(r.ac.setClimate(1,0,27) != nullptr, "Clean: đổi nhiệt bị từ chối");
@@ -475,6 +548,7 @@ int main() {
     CHECK(r.ac.setTurbo(true) != nullptr, "Clean: bật Turbo bị từ chối");
     CHECK(r.ac.setTurbo(false) != nullptr, "Clean: tắt Turbo bị từ chối");
     CHECK(r.ac.swing() != nullptr, "Clean: Swing bị từ chối");
+<<<<<<< HEAD
     CHECK(r.ir.log.empty(), "Clean: lệnh bị từ chối không phát IR");
     const AcState& s = r.ac.state();
     CHECK(s.power && s.clean && s.mode == 1 && s.fan == 0 && s.temp == 26 && !s.sleep && !s.eco && !s.turbo &&
@@ -483,6 +557,13 @@ int main() {
     CHECK(r.ac.light() == nullptr && seq(r.ir, {{0xB54AF50AA55AULL,48,1}}), "Clean: Light phát được = B5F5A5 x2");
     CHECK(s.power && s.clean && s.mode == 1 && s.fan == 0 && s.temp == 26 && !s.sleep && !s.eco && !s.turbo &&
           s.on_timer == 0 && s.off_timer == 0, "Clean: Light không đổi trạng thái"); }
+=======
+    CHECK(r.ac.light() != nullptr, "Clean: Light bị từ chối");
+    CHECK(r.ir.log.empty(), "Clean: lệnh bị từ chối không phát IR");
+    const AcState& s = r.ac.state();
+    CHECK(s.power && s.clean && s.mode == 1 && s.fan == 0 && s.temp == 26 && !s.sleep && !s.eco && !s.turbo &&
+          s.on_timer == 0 && s.off_timer == 0, "Clean: bị từ chối không đổi trạng thái"); }
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   // Tắt nguồn trong lúc Clean
   { Rig r; coolOn(r); r.ac.setClean(true); r.clear();
     CHECK(r.ac.setPower(false) == nullptr && seq(r.ir, {{w24(0xB27BE0),48,1}}), "Tắt nguồn khi Clean = B27BE0");
@@ -494,12 +575,21 @@ int main() {
     CHECK(!r.ac.state().clean && !r.ac.state().power, "Dừng Clean: máy tắt hẳn");
     Rig n; coolOn(n); CHECK(n.ac.setClean(false) == nullptr && n.ir.log.empty() && n.ac.state().power,
                             "tắt Clean khi không Clean: không phát, không đổi"); }
+<<<<<<< HEAD
   // Hết 20 phút: ESP32 tự đặt máy tắt, không phát IR, lưu NVS
   { Rig r; coolOn(r); g_millis = 1000; r.ac.setClean(true); r.clear();
     g_millis = 1000 + AC_CLEAN_DURATION_MS - 1; r.ac.update();
     CHECK(r.ac.state().clean && r.ac.state().power, "19:59: còn Clean");
     g_millis = 1000 + AC_CLEAN_DURATION_MS; r.ac.update();
     CHECK(!r.ac.state().clean && !r.ac.state().power && r.ir.log.empty(), "20:00: hết Clean, máy tắt, không phát IR");
+=======
+  // Hết 30 phút: ESP32 tự đặt máy tắt, không phát IR, lưu NVS
+  { Rig r; coolOn(r); g_millis = 1000; r.ac.setClean(true); r.clear();
+    g_millis = 1000 + AC_CLEAN_DURATION_MS - 1; r.ac.update();
+    CHECK(r.ac.state().clean && r.ac.state().power, "29:59: còn Clean");
+    g_millis = 1000 + AC_CLEAN_DURATION_MS; r.ac.update();
+    CHECK(!r.ac.state().clean && !r.ac.state().power && r.ir.log.empty(), "30:00: hết Clean, máy tắt, không phát IR");
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     IRsend ir2; AcController b; b.begin(ir2);
     CHECK(!b.state().power && !b.state().clean, "NVS: sau Clean hết giờ máy tắt");
     r.clear(); CHECK(r.ac.setPower(true) == nullptr && seq(r.ir, {{w24(0xB2BFD0),48,1}}), "sau Clean hết giờ: Bật nguồn bình thường");
@@ -507,9 +597,15 @@ int main() {
     CHECK(p.ac.state().power, "update() khi không Clean: không đổi gì");
     Rig w; coolOn(w); g_millis = 0xFFFFFFFFu - 1000u; w.ac.setClean(true);
     g_millis += AC_CLEAN_DURATION_MS - 1; w.ac.update();
+<<<<<<< HEAD
     CHECK(w.ac.state().clean, "millis() tràn số: 19:59 vẫn còn Clean");
     g_millis += 1; w.ac.update();
     CHECK(!w.ac.state().clean && !w.ac.state().power, "millis() tràn số: 20:00 hết Clean");
+=======
+    CHECK(w.ac.state().clean, "millis() tràn số: 29:59 vẫn còn Clean");
+    g_millis += 1; w.ac.update();
+    CHECK(!w.ac.state().clean && !w.ac.state().power, "millis() tràn số: 30:00 hết Clean");
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
     g_millis = 0; }
   // Clean không lưu NVS: khởi động lại thì cờ Clean mất
   { Rig r; coolOn(r); r.ac.setClean(true);

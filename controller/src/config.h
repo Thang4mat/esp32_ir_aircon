@@ -12,16 +12,26 @@
 #define AC_TEMP_MAX 30
 #define AC_TEMP_DEFAULT 25
 
+<<<<<<< HEAD
 // Clean (tự làm sạch dàn lạnh) chạy 20 phút rồi máy tự tắt (người dùng đo trên remote).
 // Máy không báo gì về ESP32 nên ESP32 tự đếm thời gian này bằng millis().
 #define AC_CLEAN_DURATION_MS 1200000UL
+=======
+// Clean (tự làm sạch dàn lạnh) chạy 30 phút rồi máy tự tắt. Máy không báo gì về ESP32
+// nên ESP32 tự đếm thời gian này bằng millis().
+#define AC_CLEAN_DURATION_MS 1800000UL
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 
 // Quá 30 giây không vào được Wi-Fi thì báo lỗi rồi khởi động lại (không chờ vô hạn).
 #define WIFI_CONNECT_TIMEOUT_MS 30000UL
 
 // IP tĩnh (luôn dùng, không có DHCP). Mỗi macro là 4 số cách nhau bằng dấu phẩy.
+<<<<<<< HEAD
 // Router của dự án không cho đặt IP ngoài dải DHCP; 192.168.6.200 nằm trong dải và chạy tốt.
 // Khi đổi mạng, chọn IP không trùng thiết bị khác.
+=======
+// WIFI_STATIC_IP phải nằm NGOÀI dải DHCP của router để không trùng thiết bị khác.
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 // DNS dùng chung địa chỉ gateway (firmware không phân giải tên miền ngoài).
 #define WIFI_STATIC_IP 192, 168, 6, 200
 #define WIFI_GATEWAY 192, 168, 6, 1

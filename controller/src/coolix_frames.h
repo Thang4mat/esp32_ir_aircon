@@ -17,7 +17,10 @@
 //  Khung trạng thái 24-bit = B2 | b1 | b2
 //     b1 = (mã quạt << 5) | 0x1F      (0x1F = trường sensor temp "bỏ qua")
 //     b2 = (mã nhiệt độ << 4) | (mã chế độ << 2)
+<<<<<<< HEAD
 //  Ở Auto và Dry remote không cho chọn quạt: mã quạt luôn là 000.
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 // =============================================================================
 
 #include <stdint.h>
@@ -36,7 +39,10 @@ constexpr uint8_t kTempMin = 17;
 constexpr uint8_t kTempMax = 30;
 
 // Mã nhiệt độ 4-bit theo thứ tự 17..30°C (khớp remote thật và kCoolixTempMap).
+<<<<<<< HEAD
 // Cùng bảng cho Cool, Auto, Dry (aircon2, aircon23).
+=======
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
 constexpr uint8_t kTempCode[14] = {0x0, 0x1, 0x3, 0x2, 0x6, 0x7, 0x5,
                                    0x4, 0xC, 0xD, 0x9, 0x8, 0xA, 0xB};
 
@@ -69,6 +75,7 @@ inline uint32_t state(uint8_t mode, uint8_t fan, uint8_t temp) {
   }
   const uint8_t temp_code = (mode == kModeFan) ? 0xE : kTempCode[temp - kTempMin];
 
+<<<<<<< HEAD
   // Auto/Dry: remote không cho chọn quạt, khung luôn mã 000 dù mức quạt đã lưu là gì
   // (aircon13). Cool/Fan: Thấp/Vừa/Cao có mã riêng, "Auto" là 101.
   uint8_t fan_bits;
@@ -81,6 +88,17 @@ inline uint32_t state(uint8_t mode, uint8_t fan, uint8_t temp) {
       case kFanHigh: fan_bits = 0b001; break;
       default: fan_bits = 0b101; break;
     }
+=======
+  // Quạt "Auto": Dry/Auto dùng mã 000, Cool/Fan dùng mã 101.
+  uint8_t fan_bits;
+  switch (fan) {
+    case kFanLow: fan_bits = 0b100; break;
+    case kFanMed: fan_bits = 0b010; break;
+    case kFanHigh: fan_bits = 0b001; break;
+    default:
+      fan_bits = (mode == kModeAuto || mode == kModeDry) ? 0b000 : 0b101;
+      break;
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   }
 
   const uint8_t b1 = static_cast<uint8_t>((fan_bits << 5) | 0x1F);
@@ -134,6 +152,7 @@ inline uint64_t timerOff(uint32_t st, uint16_t off_min, uint16_t on_min) {
   return frame48(f);
 }
 
+<<<<<<< HEAD
 // Eco: B5 4A F5 0A (0x82 bật | 0x83 tắt) b2'. b2 là byte nhiệt độ/chế độ hiện tại.
 //   Khung BẬT: b2' = b2 (không mang mã quạt).
 //   Khung TẮT: b2' = b2 | fan, fan = mức quạt hiện tại ở 2 bit thấp
@@ -142,6 +161,12 @@ inline uint64_t eco(uint32_t st, bool on, uint8_t fan) {
   const uint8_t b2 = static_cast<uint8_t>(st);
   const uint8_t last = on ? b2 : static_cast<uint8_t>(b2 | fan);
   const uint8_t f[6] = {0xB5, 0x4A, 0xF5, 0x0A, static_cast<uint8_t>(on ? 0x82 : 0x83), last};
+=======
+// Eco: B5 4A F5 0A (0x82 bật | 0x83 tắt) b2 — b2 là byte nhiệt độ/chế độ hiện tại.
+inline uint64_t eco(uint32_t st, bool on) {
+  const uint8_t f[6] = {0xB5, 0x4A, 0xF5, 0x0A, static_cast<uint8_t>(on ? 0x82 : 0x83),
+                        static_cast<uint8_t>(st)};
+>>>>>>> 590e5a8af47a4000555b4d7ece217e777219d121
   return frame48(f);
 }
 
