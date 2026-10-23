@@ -288,6 +288,16 @@ int main() {
     r.ac.setClimate(1,1,25); r.ac.setClimate(1,0,25); r.ac.setPower(false); r.clear(); r.ac.setPower(true);
     CHECK(seq(r.ir,{{w24(0xB2BFC0),48,1}}), "[aircon20] chọn lại Auto rồi tắt/bật máy = B2BFC0"); }
 
+  // 12c. aircon28: Cool, quạt Thấp 26C -> Turbo -> Eco -> tắt Eco -> tắt máy
+  { Rig r; r.ac.setClimate(1,1,26); r.ac.setPower(true); r.ac.setTurbo(true); r.clear(); r.ac.setEco(true);
+    CHECK(seq(r.ir,{{0xB54AF50A82D0ULL,48,1}}) && r.ac.state().eco && !r.ac.state().turbo && r.ac.state().fan == coolix::kFanAuto,
+          "[aircon28] Turbo rồi Eco = B54AF50A82D0, quạt về Auto");
+    r.clear(); r.ac.setEco(false);
+    CHECK(seq(r.ir,{{0xB54AF50A83D0ULL,48,1}}) && !r.ac.state().eco && r.ac.state().fan == coolix::kFanAuto,
+          "[aircon28] tắt Eco = B54AF50A83D0 (mã quạt Auto, không phải 83D1)");
+    r.clear(); r.ac.setPower(false);
+    CHECK(seq(r.ir,{{w24(0xB27BE0),48,1}}), "[aircon28] tắt máy = B27BE0"); }
+
   // 13. aircon11.txt: Eco -> Sleep -> Eco
   { Rig r; coolOn(r);
     r.ac.setEco(true);

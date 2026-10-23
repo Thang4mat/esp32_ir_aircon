@@ -11,7 +11,7 @@ Hiện chỉ có project cho **ESP32 DevKit V1** (`controller/`). Bản ESP32-C3
 > Firmware `controller/` ở bản trước (chưa có Light/Turbo/Clean) đã được **build bằng
 > PlatformIO, nạp lên ESP32 DevKit V1 và thử trên máy lạnh thật**: ESP32 phát tín hiệu đúng
 > như remote gốc, chưa thấy điều gì bất thường. Bản hiện tại (có Light/Turbo/Clean và các quy
-> luật quạt/Eco/Sleep mới) **chưa có ghi nhận thử trên máy thật**. Chi tiết xem mục "Đã kiểm chứng".
+> luật quạt/Eco/Sleep mới) **đã build, nạp và thử trên máy thật, mọi thứ ổn** (xác nhận 2026-10-23). Chi tiết xem mục "Đã kiểm chứng".
 
 ## Bước 1 — Xác minh giao thức (nếu đổi remote/máy)
 
@@ -174,8 +174,8 @@ gian xung, mạch phát hay Wi-Fi.
   (`aircon.txt` ... `aircon27.txt`).
 - **Trên máy thật bằng ESP32 DevKit V1**: bản firmware trước khi thêm Light/Turbo/Clean
   đã build, nạp và thử. ESP32 phát tín hiệu đến máy lạnh giống remote, chưa thấy điều gì
-  bất thường. **Light, Turbo, Clean, các quy luật quạt/Eco/Sleep mới, Clean 20 phút: chưa có ghi
-  nhận thử trên máy thật qua ESP32.**
+  bất thường. **Bản v2** (Light, Turbo, Clean, quy luật quạt/Eco/Sleep mới, Clean 20 phút, hẹn BẬT + TẮT
+  cùng lúc) cũng đã build, nạp và thử trên máy thật: ESP32 phát đúng như remote, mọi thứ ổn (xác nhận 2026-10-23).
 - **IP tĩnh `192.168.6.200`** (nằm trong dải DHCP của router, router không cho đặt ngoài dải): hoạt
   động tốt trên mạng thật (người dùng xác nhận).
 - **Quy luật do người dùng thử trực tiếp trên remote và máy lạnh** (không có khung IR riêng):
@@ -183,6 +183,8 @@ gian xung, mạch phát hay Wi-Fi.
   hẳn; trong Clean Swing không phản ứng, Bật nguồn bị bỏ qua (bấm lại thì máy tắt ngay), Light vẫn
   đổi đèn; máy tắt thì Turbo/Clean không phản ứng còn Light chỉ bíp; Eco rồi Turbo/Sleep và hẹn giờ khi
   Turbo (quan sát bằng LED máy).
+- **Turbo rồi Eco** (`aircon28`): quạt Thấp, bật Turbo, bật Eco rồi tắt Eco cho khung tắt Eco `B54AF50A83D0` (mã quạt `00` = Auto),
+  nên bật Eco đặt quạt về Auto kể cả khi đang Turbo (xác nhận bằng tín hiệu thu, 2026-10-23).
 - **Trên PC**: đối chiếu từng byte khung IR với tín hiệu thu: bảng nhiệt Cool/Auto/Dry 17–30,
   Mode/Fan (kể cả quạt ở Fan, quạt giữ qua Dry/Auto), hẹn BẬT và hẹn TẮT ở các mốc 0.5–24 giờ
   (Cool, Dry, Auto, Fan), hẹn BẬT + TẮT cùng lúc (TẮT 0.5 giờ + BẬT 1 giờ = `B24DA15ED083`),
@@ -196,9 +198,8 @@ gian xung, mạch phát hay Wi-Fi.
 Firmware đang làm như dưới đây dựa trên suy luận, chưa có tín hiệu thu từ remote xác nhận.
 Mỗi mục đều có ca test hoặc ghi chú trong code; nếu thu được tín hiệu khác thì sửa code và test.
 
-- **Turbo rồi Eco**: quạt về Auto (khung bật Eco không mang mã quạt, LED máy không cho biết).
-- **Hẹn BẬT + TẮT cùng lúc**: chỉ thu 2 tổ hợp (`aircon5`, `aircon11`); hiệu lực thật của cả hai
-  hẹn trên máy chưa ghi nhận.
+- **Hẹn BẬT + TẮT cùng lúc**: đã thử trên máy thật qua ESP32, hoạt động như remote (xác nhận 2026-10-23).
+  Không còn là giả định.
 - **Thời lượng Clean 20 phút** là con số người dùng đo trên remote; ESP32 tự đếm bằng
   `millis()`, không nhận tín hiệu nào từ máy. Nếu máy chạy lệch vài giây hoặc vài phút thì
   cờ Clean trên ESP32 lệch theo.

@@ -82,10 +82,10 @@ test/                      test logic trên PC (stub Arduino/IRsend/Preferences)
   run.sh, test_controller.cpp
 ```
 
-Bằng chứng gốc: `aircon.txt` ... `aircon27.txt` (đầu ra IRrecvDumpV2 của remote thật, người dùng upload). `aircon12`-`aircon19`: Eco/Sleep/Turbo/quạt/hẹn giờ ở Auto-Fan. `aircon20`-`aircon27` (2026-10-21/22): đóng các giả định còn lại (chi tiết mục 7). Handoff: `handoff-esp32_ir_aircon_1..4.md` (bối cảnh, quy luật Sleep/Eco/hẹn giờ/Light/Turbo/Clean, bộ test).
+Bằng chứng gốc: `aircon.txt` ... `aircon28.txt` (đầu ra IRrecvDumpV2 của remote thật, người dùng upload). `aircon12`-`aircon19`: Eco/Sleep/Turbo/quạt/hẹn giờ ở Auto-Fan. `aircon20`-`aircon28` (2026-10-21/23): đóng các giả định còn lại (chi tiết mục 7). Handoff: `handoff-esp32_ir_aircon_1..4.md` (bối cảnh, quy luật Sleep/Eco/hẹn giờ/Light/Turbo/Clean, bộ test).
 
 Lệnh:
-- Test PC: `./test/run.sh` hoặc `sh test/run.sh` nếu mất quyền thực thi (cần g++ C++17). Kết quả gần nhất: `321/321 dat` (người dùng đã chạy xác nhận; đã chạy 22 đột biến, đều bị bắt).
+- Test PC: `./test/run.sh` hoặc `sh test/run.sh` nếu mất quyền thực thi (cần g++ C++17). Kết quả gần nhất: `321/321 dat` (người dùng đã chạy xác nhận; đã chạy 22 đột biến, đều bị bắt). Đã thêm 3 ca `aircon28` (Turbo rồi Eco): kỳ vọng `324/324`, CHỜ người dùng chạy xác nhận.
 - Build/nạp: `cd controller && pio run -t upload && pio device monitor` (container KHÔNG có PlatformIO: không được khẳng định "build được"; người dùng build/nạp và báo lại).
 - Đóng gói: xoá `test/.test_bin`, kiểm tra file ẩn (`.gitignore`), chạy lại test từ chính bản giải nén.
 
@@ -94,30 +94,28 @@ Quy ước: mỗi ca test mới phải kèm tín hiệu thu làm bằng chứng;
 ## 7. Tiến độ
 
 - **Đã xong:**
-  - Firmware DevKit V1 (Power, Mode, Fan, Temp, Swing, Sleep, Eco, Hẹn giờ BẬT/TẮT, Light, Turbo, Clean), Web UI, README. Bản cũ (trước Light/Turbo/Clean) đã build/nạp/thử trên máy thật ở mức chung. IP tĩnh 192.168.6.200 hoạt động tốt (người dùng xác nhận; nằm trong dải DHCP của router, router không cho đặt ngoài dải; ca đã ĐÓNG). Light/Turbo/Clean, quy luật quạt mới, mDNS restart: chưa có ghi nhận thử riêng trên máy thật.
+  - Firmware DevKit V1 (Power, Mode, Fan, Temp, Swing, Sleep, Eco, Hẹn giờ BẬT/TẮT, Light, Turbo, Clean), Web UI, README. Bản cũ (trước Light/Turbo/Clean) đã build/nạp/thử trên máy thật ở mức chung. IP tĩnh 192.168.6.200 hoạt động tốt (người dùng xác nhận; nằm trong dải DHCP của router, router không cho đặt ngoài dải; ca đã ĐÓNG). Bản v2 (Light/Turbo/Clean, quy luật quạt mới, hẹn BẬT+TẮT cùng lúc) đã build/nạp/thử trên máy thật, mọi thứ ổn (người dùng xác nhận 2026-10-23).
   - Phiên 2026-10-22: SỬA CODE theo danh sách đã xác nhận: Clean 20 phút; Light phát được trong Clean; `eco(st,on,fan)` (khung TẮT mang mã quạt); Dry/Auto luôn mã quạt `000`; bật Eco/Sleep đặt quạt Auto; đổi quạt tắt Sleep+Turbo (không tắt Eco); `setClimate()` từ chối đổi quạt ở Dry/Auto; Web UI khóa nút quạt ở Dry/Auto + chú thích; README đóng các giả định. Test 321/321, 16/16 đột biến bị bắt. File đổi: `coolix_frames.h`, `ac_controller.h`, `config.h`, `web_ui.h`, `README.md`, `test/test_controller.cpp`, `test/stub/*` (nội dung stub không đổi). `main.cpp`, NVS không đổi.
 - **Bản chuẩn:** v2 (`esp32_ir_aircon_2.zip`) thay thế hoàn toàn bản v1 (người dùng đối chiếu, đã kiểm lại: logic firmware trùng v1, test 321 > 306, bắt thêm đột biến NVS-fan mà v1 để lọt). Người dùng đã chạy test 321/321.
-- **Đang làm:** người dùng cập nhật tài liệu dự án và push v2 lên GitHub.
+- **Trạng thái:** DỰ ÁN HOÀN THÀNH (người dùng xác nhận 2026-10-23). Không còn việc đang làm.
 - **Việc tiếp theo:**
-  1. Người dùng build/nạp bản mới (`pio run -t upload`) và thử trên máy thật: Light/Turbo/Clean, tắt Eco ở các mức quạt, quạt ở Dry/Auto, Clean 20 phút.
-  2. Chờ log Serial qua đêm về lỗi `.local` (handoff #4) nếu người dùng gửi.
-  3. Bản C3 SuperMini chỉ khi người dùng có board và yêu cầu.
+  1. (Tuỳ chọn, không quan trọng) Người dùng tự kiểm tra lỗi mDNS `.local` qua đêm khi có thời gian; đã vào được bằng IP tĩnh.
+  2. Bản C3 SuperMini chỉ khi người dùng có board và yêu cầu.
 - **Quy luật quạt/Sleep/Eco/Turbo/Clean (ĐÃ XÁC NHẬN), mỗi mục có bằng chứng:**
   1. Bật Eco hoặc bật Sleep thì `fan = Auto` (Eco `aircon12/13/14`; Sleep `aircon15/17/18/25`).
   2. Tắt Eco/Sleep: `fan` giữ mức hiện tại (`aircon18/19`).
   3. Đổi tốc độ quạt: tắt Sleep và Turbo, KHÔNG tắt Eco. Chọn lại đúng mức đang lưu khi Sleep không tắt Sleep.
   4. Đổi nhiệt giữ Sleep, Eco, Turbo, hẹn giờ. Hẹn giờ giữ Eco và giữ Turbo (`aircon14`, `aircon26/27`).
-  5. Bật Turbo không đổi quạt. Bật Eco hoặc Sleep tắt Turbo (`aircon27`).
+  5. Bật Turbo không đổi quạt. Bật Eco hoặc Sleep tắt Turbo (`aircon27`). Turbo rồi Eco: quạt về Auto, khung tắt Eco `83D0` dù quạt trước đó là Thấp (`aircon28`).
   6. Tắt máy xoá Eco; đổi chế độ xoá Sleep/Eco/Turbo; `fan` giữ mức cuối.
   7. Dry/Auto: remote không cho chọn quạt, khung mã `000`; quạt đã chọn giữ khi quay lại Cool.
   8. Khung TẮT Eco mang mã quạt MỨC CUỐI ở 2 bit thấp byte cuối (0 Auto, 1 Thấp, 2 Vừa, 3 Cao); chọn lại Auto = `00`; đổi nhiệt độc lập; khung BẬT Eco không mang mã quạt (`aircon12-14/18/19/27`).
   9. Clean chạy 20 phút (người dùng đo). Trong Clean: Swing không phản ứng (`aircon26`); Bật nguồn (`B29FC0`) bị bỏ qua, bấm lại (`B27BE0`) máy tắt ngay; Light (`B5F5A5`) máy có phản ứng (`aircon26/27`). ESP32: từ chối mọi lệnh trừ Clean, Tắt nguồn, Light.
 - **Giả định còn lại (ghi vào README, chưa có tín hiệu thu riêng):**
-  - Turbo rồi Eco: `fan` về Auto (khung bật Eco không mang quạt, LED không cho biết).
-  - Hẹn BẬT+TẮT cùng lúc chỉ thu 2 tổ hợp (`aircon5`, `aircon11`); hiệu lực thật của cả hai hẹn chưa ghi nhận (người dùng đang test mục 6).
-  - Clean 20 phút do ESP32 tự đếm bằng `millis()`, không nhận tín hiệu từ máy.
+  - Hẹn BẬT+TẮT cùng lúc: ESP32 phát đúng như remote, đã thử trên máy thật, ổn (2026-10-23). Ca ĐÓNG.
+  - Clean 20 phút do ESP32 tự đếm bằng `millis()`: giới hạn của điều khiển một chiều (không thể có tín hiệu thu), người dùng đã đo thực tế 20 phút. Ca ĐÓNG.
 - **Vấn đề còn mở:**
-  - Light/Turbo/Clean, quy luật quạt/Eco/Sleep mới chưa có ghi nhận thử trên máy thật qua ESP32.
+  - Lỗi mDNS `.local` qua đêm: người dùng sẽ kiểm tra sau nếu có thời gian (không quan trọng).
   - Quan sát cũ (không phải lỗi): `platformio.ini` không ghim phiên bản; Swing và Light là lệnh đảo, Web UI không hiển thị; Web UI không tự cập nhật; lệnh đổi trạng thái qua HTTP GET; README nhắc sơ đồ mạch phát IR nhưng zip không có; hẹn giờ đã chạy xong trên máy mà ESP32 vẫn giữ Eco/hẹn giờ trong NVS (giới hạn đã biết, chỉ ghi README).
   - Quy trình chuẩn: kiểm tra bằng chứng -> trình bày thiết kế -> người dùng xác nhận -> mới code/xuất file.
 
