@@ -162,7 +162,7 @@ Bộ test không cần ESP32 hay PlatformIO. Nó gồm:
   `g_millis` trong `test/stub/Arduino.h`, kể cả khi `millis()` tràn số;
 - kiểm tra lưu/nạp NVS (stub `Preferences` giữ dữ liệu giữa các lần khởi tạo).
 
-Kết quả mong đợi: `321/321 dat` (người dùng đã chạy xác nhận). Nếu file `run.sh` mất quyền thực thi
+Kết quả mong đợi: `324/324 dat` (người dùng đã chạy xác nhận). Nếu file `run.sh` mất quyền thực thi
 (sau khi giải nén zip), chạy `sh test/run.sh`. Chạy lại sau mỗi lần sửa `coolix_frames.h` hoặc
 `ac_controller.h`. Bộ test chỉ kiểm tra logic mã hoá và chọn khung, KHÔNG kiểm tra thời
 gian xung, mạch phát hay Wi-Fi.
@@ -171,7 +171,7 @@ gian xung, mạch phát hay Wi-Fi.
 
 - **Remote thật**: hành vi của máy lạnh (Sleep, Eco, hẹn giờ, đổi chế độ/nhiệt/quạt, tắt
   máy, Light/Turbo/Clean) đã được thu và đối chiếu bằng remote thật, qua `capture/`
-  (`aircon.txt` ... `aircon27.txt`).
+  (`aircon.txt` ... `aircon28.txt`).
 - **Trên máy thật bằng ESP32 DevKit V1**: bản firmware trước khi thêm Light/Turbo/Clean
   đã build, nạp và thử. ESP32 phát tín hiệu đến máy lạnh giống remote, chưa thấy điều gì
   bất thường. **Bản v2** (Light, Turbo, Clean, quy luật quạt/Eco/Sleep mới, Clean 20 phút, hẹn BẬT + TẮT

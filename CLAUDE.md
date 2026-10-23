@@ -85,7 +85,7 @@ test/                      test logic trên PC (stub Arduino/IRsend/Preferences)
 Bằng chứng gốc: `aircon.txt` ... `aircon28.txt` (đầu ra IRrecvDumpV2 của remote thật, người dùng upload). `aircon12`-`aircon19`: Eco/Sleep/Turbo/quạt/hẹn giờ ở Auto-Fan. `aircon20`-`aircon28` (2026-10-21/23): đóng các giả định còn lại (chi tiết mục 7). Handoff: `handoff-esp32_ir_aircon_1..4.md` (bối cảnh, quy luật Sleep/Eco/hẹn giờ/Light/Turbo/Clean, bộ test).
 
 Lệnh:
-- Test PC: `./test/run.sh` hoặc `sh test/run.sh` nếu mất quyền thực thi (cần g++ C++17). Kết quả gần nhất: `321/321 dat` (người dùng đã chạy xác nhận; đã chạy 22 đột biến, đều bị bắt). Đã thêm 3 ca `aircon28` (Turbo rồi Eco): kỳ vọng `324/324`, CHỜ người dùng chạy xác nhận.
+- Test PC: `./test/run.sh` hoặc `sh test/run.sh` nếu mất quyền thực thi (cần g++ C++17). Kết quả gần nhất: `324/324 dat` (người dùng đã chạy xác nhận 2026-10-23; gồm 3 ca `aircon28` Turbo rồi Eco; đã chạy 22 đột biến ở bản 321, đều bị bắt).
 - Build/nạp: `cd controller && pio run -t upload && pio device monitor` (container KHÔNG có PlatformIO: không được khẳng định "build được"; người dùng build/nạp và báo lại).
 - Đóng gói: xoá `test/.test_bin`, kiểm tra file ẩn (`.gitignore`), chạy lại test từ chính bản giải nén.
 
