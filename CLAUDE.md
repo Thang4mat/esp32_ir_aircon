@@ -65,7 +65,7 @@ Quy tắc áp dụng:
 
 Dự án: ESP32 điều khiển máy lạnh Midea Inverter 1HP MAFA-09CDN8 (chỉ có IR, giao thức COOLIX) qua Web UI tự host trên ESP32. Board có: ESP32 DevKit V1. ESP32-C3 SuperMini CHƯA có: KHÔNG viết code C3 cho tới khi người dùng yêu cầu.
 
-Mã nguồn: người dùng thêm repo `esp32_ir_aircon` vào thư mục dự án (không cần zip). Nếu phiên mới không thấy mã nguồn trên đĩa thì xin người dùng cung cấp lại (đính kèm file); không dựng từ trí nhớ. Làm việc tại `/home/claude/work/esp32_ir_aircon/`; giao file đã sửa dạng `esp32_ir_aircon_patch.zip` (đúng đường dẫn tương đối trong repo, chỉ file đã đổi).
+Mã nguồn: repo `esp32_ir_aircon` nằm trong thư mục dự án. Nếu không thấy trên đĩa thì `git clone --depth 1 https://github.com/Thang4mat/esp32_ir_aircon.git` vào `/home/claude/work/` (repo public). Không dựng từ trí nhớ, không dùng zip cũ. Clone lỗi thì báo người dùng và xin đính kèm file. Làm việc tại `/home/claude/work/esp32_ir_aircon/`; giao file đã sửa dạng `esp32_ir_aircon_patch.zip` (đúng đường dẫn tương đối trong repo, chỉ file đã đổi). Container không push GitHub, người dùng tự commit.
 
 ```
 README.md                  hướng dẫn build/nạp/dùng, mô hình hoá remote, hẹn giờ, giả định chưa thu
@@ -83,7 +83,7 @@ test/                      test logic trên PC (stub Arduino/IRsend/Preferences;
   run.sh, test_controller.cpp
 ```
 
-Bằng chứng gốc: `aircon.txt` ... `aircon28.txt` (đầu ra IRrecvDumpV2 của remote thật, người dùng upload). `aircon12`-`aircon19`: Eco/Sleep/Turbo/quạt/hẹn giờ ở Auto-Fan. `aircon20`-`aircon28` (2026-10-21/23): đóng các giả định còn lại. Handoff: `handoff-esp32_ir_aircon_1..4.md` (bối cảnh, quy luật Sleep/Eco/hẹn giờ/Light/Turbo/Clean, bộ test).
+Bằng chứng gốc: `aircon.txt` ... `aircon28.txt` (đầu ra IRrecvDumpV2 của remote thật, người dùng upload). `aircon12`-`aircon19`: Eco/Sleep/Turbo/quạt/hẹn giờ ở Auto-Fan. `aircon20`-`aircon28` (2026-10-21/23): đóng các giả định còn lại. Handoff: `handoff-esp32_ir_aircon_1..4.md` (bối cảnh, quy luật Sleep/Eco/hẹn giờ/Light/Turbo/Clean, bộ test). `aircon*.txt` và `handoff-*.md` KHÔNG nằm trong repo; cần thì xin người dùng đính kèm.
 
 Lệnh:
 - Test PC: `./test/run.sh` hoặc `sh test/run.sh` nếu mất quyền thực thi (cần g++ C++17). Kết quả gần nhất: `462/462 dat` (chạy trong container 2026-11-05; người dùng CHƯA chạy bản này). Bản v2 trước đó: 324/324 (người dùng xác nhận 2026-10-23). 60 đột biến vào logic hẹn giờ mới đều bị bắt.
@@ -97,9 +97,9 @@ Quy ước: mỗi ca test mới phải kèm tín hiệu thu hoặc phép thử c
 
 - **Đã xong:**
   - Firmware DevKit V1 (Power, Mode, Fan, Temp, Swing, Sleep, Eco, Hẹn giờ, Light, Turbo, Clean), Web UI, README. Bản v2 (Light/Turbo/Clean, quy luật quạt mới, hẹn BẬT+TẮT cùng lúc) đã build/nạp/thử trên máy thật, mọi thứ ổn (người dùng xác nhận 2026-10-23). IP tĩnh 192.168.6.200 hoạt động tốt (nằm trong dải DHCP của router; ca đã ĐÓNG).
-  - Phiên 2026-11-05 (v3, CODE XONG, CHƯA build/nạp): hẹn giờ theo giờ thực. NTP (`pool.ntp.org`, UTC+7); hẹn "Sau X giờ" lưu `t_start` (NVS) và ESP32 tự theo dõi (không phát IR khi đến hạn); hẹn "Lúc hh:mm" do ESP32 đếm và phát lệnh Bật/Tắt; hai loại loại trừ nhau; hẹn lỡ thì xóa, giữ `power`, cảnh báo trong RAM; chưa có giờ thì từ chối đặt hẹn; nút Nguồn xóa mọi hẹn; Clean xóa hẹn "Sau X giờ" nhưng giữ hẹn "Lúc hh:mm" (Bật bị bỏ qua); API mới `/api/schedule`, `/api/cancel`; state JSON thêm `kind, clock, on_left, off_left, on_due, off_due, missed_on, missed_off`; Web UI: thẻ hẹn giờ gộp (Đặt/Hủy, đổi ô chọn không gửi IR), tự cập nhật 5 giây. File đổi: `ac_controller.h`, `main.cpp`, `config.h`, `web_ui.h`, `README.md`, `CLAUDE.md`, `test/test_controller.cpp`, `test/stub/Preferences.h` (thêm getUInt/putUInt). `coolix_frames.h` không đổi. Repo không có trên đĩa phiên này: dựng lại từ tài liệu người dùng đính kèm; bộ test cũ chạy lại 324/324 trước khi thêm ca mới.
+  - Phiên 2026-11-05 (v3, CODE XONG, CHƯA build/nạp): hẹn giờ theo giờ thực. NTP (`pool.ntp.org`, UTC+7); hẹn "Sau X giờ" lưu `t_start` (NVS) và ESP32 tự theo dõi (không phát IR khi đến hạn); hẹn "Lúc hh:mm" do ESP32 đếm và phát lệnh Bật/Tắt; hai loại loại trừ nhau; hẹn lỡ thì xóa, giữ `power`, cảnh báo trong RAM; chưa có giờ thì từ chối đặt hẹn; nút Nguồn xóa mọi hẹn; Clean xóa hẹn "Sau X giờ" nhưng giữ hẹn "Lúc hh:mm" (Bật bị bỏ qua); API mới `/api/schedule`, `/api/cancel`; state JSON thêm `kind, clock, on_left, off_left, on_due, off_due, missed_on, missed_off`; Web UI: thẻ hẹn giờ gộp (Đặt/Hủy, đổi ô chọn không gửi IR), tự cập nhật 5 giây. File đổi: `ac_controller.h`, `main.cpp`, `config.h`, `web_ui.h`, `README.md`, `CLAUDE.md`, `test/test_controller.cpp`, `test/stub/Preferences.h` (thêm getUInt/putUInt). `coolix_frames.h` không đổi. Bộ test cũ chạy lại 324/324 trước khi thêm ca mới.
 - **Bản chuẩn:** v3 (`esp32_ir_aircon_patch.zip` phiên 2026-11-05) đè lên v2. Chỉ dùng khi người dùng xác nhận đã build/nạp được; nếu có vấn đề, v2 vẫn là bản đã thử trên máy thật.
-- **Trạng thái:** chờ người dùng build/nạp v3 và thử theo danh sách trong README ("Cần thử sau khi nạp v3").
+- **Trạng thái:** v3 đã upload GitHub (commit `7a9004b`, 2026-11-06), test PC 462/462 chạy lại từ bản clone; chờ người dùng build/nạp v3 và báo log `[NTP]` + 5 phép thử trong README ("Cần thử sau khi nạp v3").
 - **Việc tiếp theo:**
   1. Người dùng build/nạp v3, báo log `[NTP]` (DNS của router có phân giải được `pool.ntp.org` không) và kết quả 5 phép thử trong README.
   2. (Tuỳ chọn, không quan trọng) kiểm tra lỗi mDNS `.local` qua đêm; đã vào được bằng IP tĩnh.
