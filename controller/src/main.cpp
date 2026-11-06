@@ -2,16 +2,18 @@
 // (giao thức COOLIX của remote máy lạnh Midea) mỗi khi người dùng bấm nút.
 //
 // Kiến trúc "một hướng": trình duyệt -> ESP32 (Web UI + Web server) -> IR.
-// Không MQTT, không cloud, không Home Assistant.
+// Không MQTT, không cloud, không Home Assistant. Chỉ dùng Internet để lấy giờ thực (NTP),
+// phục vụ hẹn giờ "Lúc hh:mm" và theo dõi hẹn giờ "Sau X giờ".
 //
-// Logic chọn khung IR nằm trong ac_controller.h, mã hoá khung nằm trong
-// coolix_frames.h. File này chỉ nối Wi-Fi, HTTP và AcController với nhau.
+// Logic chọn khung IR và hẹn giờ nằm trong ac_controller.h, mã hoá khung nằm trong
+// coolix_frames.h. File này chỉ nối Wi-Fi, NTP, HTTP và AcController với nhau.
 
 #include <Arduino.h>
 #include <ESPmDNS.h>
 #include <IRsend.h>
 #include <WebServer.h>
 #include <WiFi.h>
+#include <time.h>
 
 #include "ac_controller.h"
 #include "config.h"
@@ -30,6 +32,18 @@ static WebServer server(HTTP_PORT);
 // lần lặp trước Wi-Fi đã nối hay chưa, và mDNS đã chạy hay chưa (để gọi MDNS.end()).
 static bool wifi_was_connected = false;
 static bool mdns_active = false;
+// Theo dõi đồng bộ giờ NTP để in log chẩn đoán (xem reportNtp()).
+static uint32_t ntp_start_ms = 0;
+static bool ntp_synced = false;
+static bool ntp_warned = false;
+
+// ---- Giờ thực ---------------------------------------------------------------
+
+// Đồng hồ cấp cho AcController: epoch UTC (giây), 0 = chưa đồng bộ giờ.
+static uint32_t nowEpoch() {
+  const time_t t = time(nullptr);
+  return t >= static_cast<time_t>(CLOCK_MIN_VALID_EPOCH) ? static_cast<uint32_t>(t) : 0;
+}
 
 // ---- Tiện ích HTTP ----------------------------------------------------------
 
@@ -37,7 +51,7 @@ static void replyError(const char* msg) {
   server.send(400, "text/plain; charset=utf-8", msg);
 }
 
-// Đọc tham số nguyên bắt buộc. Thiếu hoặc không phải số -> false.
+// Đọc tham số nguyên bắt buộc (chấp nhận số âm, ví dụ -1). Thiếu hoặc không phải số -> false.
 static bool argInt(const char* name, int& out) {
   if (!server.hasArg(name)) return false;
   const String v = server.arg(name);
@@ -65,13 +79,22 @@ static void replyBadArg(const char* name) {
 
 static void replyState() {
   const AcState& s = ac.state();
-  char buf[200];
-  snprintf(buf, sizeof(buf),
-           "{\"power\":%s,\"mode\":%u,\"fan\":%u,\"temp\":%u,\"sleep\":%s,\"eco\":%s,"
-           "\"turbo\":%s,\"clean\":%s,\"on_timer\":%u,\"off_timer\":%u}",
-           s.power ? "true" : "false", s.mode, s.fan, s.temp, s.sleep ? "true" : "false",
-           s.eco ? "true" : "false", s.turbo ? "true" : "false", s.clean ? "true" : "false",
-           s.on_timer, s.off_timer);
+  const TimerInfo t = ac.timerInfo();
+  char buf[512];
+  const int n = snprintf(
+      buf, sizeof(buf),
+      "{\"power\":%s,\"mode\":%u,\"fan\":%u,\"temp\":%u,\"sleep\":%s,\"eco\":%s,"
+      "\"turbo\":%s,\"clean\":%s,\"on_timer\":%u,\"off_timer\":%u,"
+      "\"kind\":%d,\"clock\":%d,\"on_left\":%lu,\"off_left\":%lu,\"on_due\":%d,\"off_due\":%d,"
+      "\"missed_on\":%d,\"missed_off\":%d}",
+      s.power ? "true" : "false", s.mode, s.fan, s.temp, s.sleep ? "true" : "false",
+      s.eco ? "true" : "false", s.turbo ? "true" : "false", s.clean ? "true" : "false",
+      s.on_timer, s.off_timer, t.kind, t.clock, static_cast<unsigned long>(t.on_left),
+      static_cast<unsigned long>(t.off_left), t.on_due, t.off_due, t.missed_on, t.missed_off);
+  if (n < 0 || n >= static_cast<int>(sizeof(buf))) {
+    server.send(500, "text/plain; charset=utf-8", "State JSON vượt bộ đệm.");
+    return;
+  }
   server.send(200, "application/json", buf);
 }
 
@@ -104,12 +127,23 @@ static void handleClimate() {
   replyResult(ac.setClimate(mode, fan, temp));
 }
 
+// Hẹn giờ "Sau X giờ": số phút (máy lạnh tự đếm).
 static void handleTimer() {
   int on_min, off_min;
   if (!argInt("on", on_min)) return replyBadArg("on");
   if (!argInt("off", off_min)) return replyBadArg("off");
   replyResult(ac.setTimers(on_min, off_min));
 }
+
+// Hẹn giờ "Lúc hh:mm": phút trong ngày 0-1439 (6:25 -> 385), -1 = không hẹn (ESP32 tự đếm).
+static void handleSchedule() {
+  int on_min, off_min;
+  if (!argInt("on", on_min)) return replyBadArg("on");
+  if (!argInt("off", off_min)) return replyBadArg("off");
+  replyResult(ac.setSchedule(on_min, off_min));
+}
+
+static void handleCancel() { replyResult(ac.cancelTimers()); }
 
 static void handleSleep() {
   bool on;
@@ -200,18 +234,44 @@ static void startMdns() {
   Serial.printf("[mDNS] Sẵn sàng tại http://%s.local\n", MDNS_HOSTNAME);
 }
 
+// ---- NTP --------------------------------------------------------------------
+
+// Chỉ log chẩn đoán, không có đường dự phòng: chưa có giờ thì hẹn giờ bị từ chối (HTTP 400).
+// Gọi mỗi vòng loop() cho tới khi đã có giờ.
+static void reportNtp() {
+  if (ntp_synced) return;
+  if (nowEpoch() != 0) {
+    ntp_synced = true;
+    const int m = ac.timerInfo().clock;  // phút trong ngày (UTC+7)
+    Serial.printf("[NTP] Đã đồng bộ giờ: %02d:%02d (UTC+7)\n", m / 60, m % 60);
+    return;
+  }
+  if (!ntp_warned && millis() - ntp_start_ms > NTP_WARN_TIMEOUT_MS) {
+    ntp_warned = true;
+    Serial.println("[NTP] CẢNH BÁO: quá 30 giây vẫn chưa có giờ nên hẹn giờ bị từ chối. "
+                   "Kiểm tra router có chuyển tiếp DNS và có Internet không.");
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   irsend.begin();
-  ac.begin(irsend);
+  ac.begin(irsend, nowEpoch);
 
   connectWiFiOrRestart();
+
+  // Gọi một lần sau khi Wi-Fi đã nối (connectWiFiOrRestart() chờ tới khi nối được).
+  // SNTP của lwIP tự đồng bộ lại định kỳ, kể cả sau khi Wi-Fi rớt rồi nối lại.
+  configTime(TIMEZONE_OFFSET_SEC, 0, NTP_SERVER);
+  ntp_start_ms = millis();
 
   server.on("/", HTTP_GET, handleRoot);
   server.on("/api/state", HTTP_GET, handleState);
   server.on("/api/power", HTTP_GET, handlePower);
   server.on("/api/climate", HTTP_GET, handleClimate);
   server.on("/api/timer", HTTP_GET, handleTimer);
+  server.on("/api/schedule", HTTP_GET, handleSchedule);
+  server.on("/api/cancel", HTTP_GET, handleCancel);
   server.on("/api/sleep", HTTP_GET, handleSleep);
   server.on("/api/eco", HTTP_GET, handleEco);
   server.on("/api/turbo", HTTP_GET, handleTurbo);
@@ -225,6 +285,7 @@ void setup() {
 void loop() {
   server.handleClient();
   ac.update();
+  reportNtp();
 
   // Khởi động mDNS mỗi lần Wi-Fi chuyển từ "chưa nối" sang "đã nối" (lần đầu và mọi lần
   // nối lại), vì responder mDNS có thể ngừng phục vụ sau khi mạng đổi trạng thái.

@@ -8,10 +8,11 @@ thu thực tế từ remote.
 Hiện chỉ có project cho **ESP32 DevKit V1** (`controller/`). Bản ESP32-C3 SuperMini
 **chưa làm** vì chưa có board; các ghi chú về C3 ở cuối file chỉ để tham khảo.
 
-> Firmware `controller/` ở bản trước (chưa có Light/Turbo/Clean) đã được **build bằng
-> PlatformIO, nạp lên ESP32 DevKit V1 và thử trên máy lạnh thật**: ESP32 phát tín hiệu đúng
-> như remote gốc, chưa thấy điều gì bất thường. Bản hiện tại (có Light/Turbo/Clean và các quy
-> luật quạt/Eco/Sleep mới) **đã build, nạp và thử trên máy thật, mọi thứ ổn** (xác nhận 2026-10-23). Chi tiết xem mục "Đã kiểm chứng".
+> Bản **v2** (Light/Turbo/Clean, quy luật quạt/Eco/Sleep mới) đã build, nạp và thử trên máy
+> lạnh thật, mọi thứ ổn (xác nhận 2026-10-23).
+> Bản **v3** (hẹn giờ theo giờ thực: NTP, hẹn "Lúc hh:mm", tự theo dõi hẹn giờ, Web UI tự cập nhật)
+> **chưa build, chưa nạp, chưa thử trên máy thật**. Phần logic đã qua bộ test trên PC; phần NTP/Wi-Fi/
+> Web UI chỉ kiểm tra cú pháp. Xem mục "Cần thử sau khi nạp v3".
 
 ## Bước 1 — Xác minh giao thức (nếu đổi remote/máy)
 
@@ -42,6 +43,12 @@ Router của dự án không cho đặt IP ngoài dải DHCP, nên `192.168.6.20
 tốt. Khi đổi mạng, đổi cho khớp mạng mới và chọn IP không trùng thiết bị khác.
 Không đặt được IP tĩnh thì ESP32 báo lỗi trên Serial Monitor rồi tự khởi động lại.
 
+**Giờ thực (NTP)**: sau khi nối Wi-Fi, ESP32 đồng bộ giờ từ `pool.ntp.org` (`NTP_SERVER` trong
+`config.h`), múi giờ UTC+7 (`TIMEZONE_OFFSET_SEC`). DNS dùng địa chỉ gateway nên **router phải chuyển
+tiếp DNS** (hầu hết đều có). Serial Monitor in `[NTP] Đã đồng bộ giờ: hh:mm (UTC+7)` khi thành công, hoặc
+`[NTP] CẢNH BÁO ...` nếu quá 30 giây vẫn chưa có giờ. Chưa có giờ thì **không đặt được hẹn giờ** (HTTP 400,
+"Chưa đồng bộ giờ"); các chức năng khác vẫn dùng bình thường.
+
 ## Bước 3 — Lắp mạch phát IR & nạp firmware chính
 
 Lắp theo sơ đồ "Mạch phát IR (TX)" (R1=1kΩ, Q1=2N2222, R2=27Ω/2W, 2× LED IR333-C
@@ -57,6 +64,7 @@ pio device monitor
 Mở `http://esp32-aircon.local` hoặc trực tiếp bằng IP tĩnh (mặc định `http://192.168.6.200`).
 mDNS được khởi động lại mỗi lần Wi-Fi nối lại (log `[mDNS] Sẵn sàng ...` xuất hiện lại trên
 Serial Monitor). Nếu `.local` vẫn không vào được sau một thời gian, dùng IP.
+Trang tự cập nhật trạng thái mỗi 5 giây khi tab đang hiển thị.
 
 ## Cấu trúc thư mục
 
@@ -70,16 +78,16 @@ esp32_ir_aircon/
 │       └── config.h                 # chân GPIO mắt thu (IR_RX_PIN = 15), kích thước bộ đệm
 ├── test/                            # bộ test chạy trên PC (không cần ESP32)
 │   ├── run.sh                       # biên dịch và chạy test
-│   ├── test_controller.cpp          # đối chiếu khung IR với tín hiệu thu + kịch bản trạng thái + NVS
+│   ├── test_controller.cpp          # đối chiếu khung IR với tín hiệu thu + kịch bản trạng thái + hẹn giờ + NVS
 │   └── stub/                        # giả lập Arduino.h, IRsend.h, Preferences.h (kho NVS dùng chung)
 └── controller/                      # ESP32 DevKit V1 — firmware chính
     ├── platformio.ini
     └── src/
-        ├── main.cpp                 # Wi-Fi + HTTP, nối các phần với nhau
-        ├── ac_controller.h          # trạng thái, lưu NVS, chọn khung IR nào để gửi
+        ├── main.cpp                 # Wi-Fi + NTP + HTTP, nối các phần với nhau
+        ├── ac_controller.h          # trạng thái, lưu NVS, hẹn giờ, chọn khung IR nào để gửi
         ├── coolix_frames.h          # mã hoá khung IR (thuần tính toán)
         ├── web_ui.h                 # trang Web UI (PROGMEM)
-        ├── config.h                 # chân GPIO, hằng số
+        ├── config.h                 # chân GPIO, hằng số, NTP/múi giờ
         └── secrets.h.example        # mẫu Wi-Fi, copy thành secrets.h rồi điền thật
 ```
 
@@ -87,8 +95,44 @@ esp32_ir_aircon/
 
 Power, Mode (Auto/Cool/Dry/Fan), Fan (Auto/Thấp/Vừa/Cao), Nhiệt độ 17–30°C,
 Sleep (Bật/Tắt), Eco (Bật/Tắt), Turbo (Bật/Tắt), Clean (Bật/Tắt), Light (nút đảo),
-Swing (nút đảo), Hẹn giờ bật và hẹn giờ tắt (đặt được cùng lúc; 30 phút/bước tới
-10 giờ, 1 giờ/bước tới 24 giờ). Không có Heat (máy lạnh một chiều).
+Swing (nút đảo), và **hẹn giờ Bật/Tắt theo hai cách** (đặt được cả hẹn Bật lẫn hẹn Tắt trong cùng một cách):
+**Sau X giờ** (30 phút/bước tới 10 giờ, 1 giờ/bước tới 24 giờ) và **Lúc hh:mm** (chính xác tới phút).
+Không có Heat (máy lạnh một chiều).
+
+## Hẹn giờ
+
+Hai cách hẹn khác bản chất, loại này loại trừ loại kia (đặt cách nào thì cách kia bị hủy):
+
+| | **Sau X giờ** | **Lúc hh:mm** |
+|---|---|---|
+| Ai đếm giờ | **Máy lạnh** (ESP32 gửi khung hẹn giờ 48-bit của remote) | **ESP32**, tới giờ mới gửi lệnh Bật/Tắt |
+| ESP32 tắt giữa chừng | Máy vẫn chạy đúng hẹn | **Không có lệnh nào được gửi** |
+| Độ chính xác | 30 phút (tới 10 giờ), 1 giờ (tới 24 giờ) | Chính xác tới phút |
+| Lặp lại | Một lần | Một lần |
+
+**Sau X giờ.** ESP32 lưu `t_start` (giờ thực lúc gửi khung hẹn giờ) vào NVS và chỉ **theo dõi**: đến hạn,
+ESP32 cập nhật nguồn cho khớp máy mà **không phát IR**. Nhờ dùng giờ thực nên ESP32 tắt hoặc khởi động lại
+giữa chừng vẫn tính đúng. Hẹn **Tắt** chạy xong thì Sleep/Eco/Turbo bị xóa như tắt máy bằng nút Nguồn.
+Đang hẹn giờ mà đổi nhiệt độ/quạt/chế độ/Eco/Sleep/Turbo/Swing/Light thì **máy giữ mốc cũ** (không đếm lại),
+nên `t_start` giữ nguyên; chỉ bấm "Đặt hẹn giờ" mới đặt mốc mới. Có cả hẹn Bật và hẹn Tắt thì xử lý theo
+thứ tự thời gian, cả hai tính từ cùng `t_start`.
+
+**Lúc hh:mm.** Khung hẹn giờ của remote không biểu diễn được "6:25", nên ESP32 tự đếm: lưu mốc thời gian
+thực kế tiếp (hôm nay nếu còn, nếu không thì ngày mai; đúng giờ hiện tại coi là ngày mai) vào NVS, tới giờ gửi
+đúng khung như nút Nguồn (Bật: khung trạng thái thường với cài đặt đang lưu; Tắt: `B27BE0`). Gửi lệnh dù
+ESP32 đang nghĩ máy ở trạng thái nào (sửa lệch do dùng remote gốc). Xong thì chỉ xóa mốc vừa dùng, giữ mốc
+còn lại (đặt được "Bật 6:00, Tắt 22:00"). Giờ Bật và giờ Tắt không được trùng nhau.
+**ESP32 phải luôn bật tới giờ hẹn.**
+
+- **Hẹn bị lỡ**: nếu ESP32 khởi động lại (hoặc chưa có giờ) mà giờ hẹn đã qua thì lệnh *chưa từng được gửi*.
+  ESP32 xóa hẹn đó, **giữ nguyên trạng thái nguồn** (máy có thể vẫn đang chạy) và Web UI hiện cảnh báo, cho tới
+  khi bạn thao tác tiếp hoặc ESP32 khởi động lại (cảnh báo chỉ lưu trong RAM).
+- **Clean**: bật Clean xóa hẹn "Sau X giờ" (của máy) nhưng giữ hẹn "Lúc hh:mm" (của ESP32): hẹn Tắt vẫn chạy
+  (dừng Clean, máy tắt), hẹn Bật bị bỏ qua vì máy không nhận nút Bật khi đang Clean, kèm cảnh báo.
+- **Nút Nguồn** (Bật/Tắt thủ công) xóa mọi hẹn giờ, cả hai cách.
+- Chưa có giờ NTP: không đặt được hẹn giờ. Hủy hẹn giờ vẫn được.
+- Web UI chỉ gửi lệnh khi bấm **Đặt hẹn giờ** (đổi ô chọn không gửi gì), có nút **Hủy hẹn giờ**, và hiện
+  "Tắt sau 1 giờ 25 phút (lúc 07:50)". Số liệu do ESP32 tính, không phụ thuộc đồng hồ trình duyệt.
 
 ## Cách firmware mô hình hoá remote
 
@@ -98,7 +142,7 @@ Suy ra từ tín hiệu thu thực tế:
   Tắt máy là một khung riêng. Khung trạng thái thường cũng là lệnh **hủy hẹn giờ**.
 - Khi máy đang tắt, đổi mode/fan/temp chỉ được lưu, không phát IR (mọi khung
   trạng thái đều ngầm bật máy). Áp dụng khi bấm Bật.
-- Hẹn giờ = một khung 48-bit mang theo cả cài đặt hiện tại. Đổi mode/fan/temp
+- Hẹn giờ "Sau X giờ" = một khung 48-bit mang theo cả cài đặt hiện tại. Đổi mode/fan/temp
   khi đang hẹn giờ gửi lại khung hẹn giờ với cài đặt mới (giữ hẹn giờ), kể cả khi máy đang
   tắt mà đang hẹn BẬT. Một khung hẹn TẮT mang theo cả hẹn BẬT.
 - Sleep: nếu bật, khung `B2E003` đi trước mọi khung remote gửi (khung thường
@@ -113,7 +157,7 @@ Suy ra từ tín hiệu thu thực tế:
   để dùng lại khi về Cool/Fan (kể cả qua tắt/bật máy). ESP32 từ chối đổi quạt ở hai chế độ này (HTTP 400)
   và Web UI khóa nút quạt. Bảng mã nhiệt độ của Auto và Dry giống Cool.
 - Đổi **chế độ** tự tắt Sleep, Eco, Turbo (phải bật lại thủ công), giữ hẹn giờ.
-- Tắt máy xóa Sleep, Eco, Turbo và hẹn giờ; mức quạt giữ nguyên. Bấm Bật (khung thường) cũng hủy hẹn giờ.
+- Tắt máy xóa Sleep, Eco, Turbo và mọi hẹn giờ; mức quạt giữ nguyên. Bấm Bật (khung thường) cũng hủy hẹn giờ.
 - Swing chỉ gửi lệnh đảo, không lưu trạng thái (ESP32 không đọc được máy).
 - Light (`B5F5A5`): lệnh đảo đèn hiển thị, không lưu trạng thái. Phát được cả khi máy
   tắt (máy chỉ bíp) và cả trong lúc Clean (máy đổi đèn).
@@ -122,18 +166,21 @@ Suy ra từ tín hiệu thu thực tế:
   và đặt hẹn giờ giữ Turbo; đổi chế độ hoặc tốc độ quạt, và tắt máy, xóa Turbo.
 - Clean (`B5F5AA`): lệnh đảo, ESP32 giữ cờ (không lưu NVS) và chỉ phát khi cờ đổi. Chỉ khi
   máy đang bật. Chạy 20 phút (`AC_CLEAN_DURATION_MS`, ESP32 tự đếm bằng `millis()`) rồi máy
-  tự tắt: `update()` trong `loop()` đặt cờ Clean = tắt và nguồn = tắt. Bật Clean xóa hẹn
-  giờ BẬT/TẮT, Sleep, Eco, Turbo. Dừng Clean giữa chừng (Tắt Clean) thì máy tắt hẳn. Trong
-  lúc Clean máy chỉ nhận nút Clean, nút Nguồn (tắt) và nút Light; ESP32 từ chối (HTTP 400) mọi lệnh khác.
+  tự tắt: `update()` trong `loop()` đặt cờ Clean = tắt và nguồn = tắt. Bật Clean xóa hẹn giờ
+  "Sau X giờ", Sleep, Eco, Turbo (hẹn "Lúc hh:mm" của ESP32 vẫn giữ). Dừng Clean giữa chừng (Tắt Clean) thì
+  máy tắt hẳn. Trong lúc Clean máy chỉ nhận nút Clean, nút Nguồn (tắt) và nút Light; ESP32 từ chối (HTTP 400)
+  mọi lệnh khác.
 
 ## API (GET, trả về state JSON hoặc HTTP 400 kèm lý do)
 
 | Đường dẫn | Tham số bắt buộc |
 |---|---|
 | `/api/state` | — |
-| `/api/power` | `on` = 0/1 |
+| `/api/power` | `on` = 0/1 (xóa mọi hẹn giờ) |
 | `/api/climate` | `mode` 0-3 (Auto/Cool/Dry/Fan), `fan` 0-3 (Auto/Thấp/Vừa/Cao), `temp` 17-30. Ở Auto/Dry `fan` phải bằng mức đang lưu |
-| `/api/timer` | `on`, `off` = số phút (0, 30..600 bước 30, 660..1440 bước 60) |
+| `/api/timer` | hẹn **Sau X giờ**: `on`, `off` = số phút (0, 30..600 bước 30, 660..1440 bước 60). Cần có giờ NTP nếu đặt hẹn; `0,0` = hủy |
+| `/api/schedule` | hẹn **Lúc hh:mm**: `on`, `off` = phút trong ngày 0..1439 (6:25 = 385), `-1` = không hẹn. Cần có giờ NTP; `on` ≠ `off`; `-1,-1` = hủy |
+| `/api/cancel` | — (hủy mọi hẹn giờ, cả hai cách) |
 | `/api/sleep` | `on` = 0/1 (bật: chỉ khi máy đang chạy ở Auto/Cool) |
 | `/api/eco` | `on` = 0/1 (bật: chỉ khi máy đang chạy ở Cool) |
 | `/api/turbo` | `on` = 0/1 (bật: chỉ khi máy đang chạy ở Cool) |
@@ -142,7 +189,12 @@ Suy ra từ tín hiệu thu thực tế:
 | `/api/swing` | — |
 
 Trong lúc Clean, mọi đường dẫn trên trừ `/api/state`, `/api/clean`, `/api/light` và `/api/power?on=0`
-đều trả HTTP 400. State JSON có thêm `turbo` và `clean`.
+đều trả HTTP 400 (kể cả đặt/hủy hẹn giờ).
+
+State JSON: `power, mode, fan, temp, sleep, eco, turbo, clean, on_timer, off_timer` (như trước) và các trường
+hẹn giờ do ESP32 tính sẵn: `kind` (0 không hẹn, 1 Sau X giờ, 2 Lúc hh:mm), `clock` (phút trong ngày hiện tại, -1 =
+chưa có giờ), `on_left`/`off_left` (giây còn lại), `on_due`/`off_due` (phút trong ngày của giờ đến hạn, -1 = không
+hẹn), `missed_on`/`missed_off` (phút trong ngày của hẹn không được thực hiện, -1 = không có).
 
 Tham số thiếu, không phải số hoặc ngoài khoảng đều bị từ chối, không tự sửa.
 
@@ -160,22 +212,24 @@ Bộ test không cần ESP32 hay PlatformIO. Nó gồm:
 - kiểm tra logic chọn khung IR trong `ac_controller.h` (Sleep, Eco, Turbo, Clean, Light,
   quạt, hẹn giờ, đổi chế độ, tắt máy, Swing, ca lỗi); Clean hết giờ được kiểm bằng đồng hồ giả
   `g_millis` trong `test/stub/Arduino.h`, kể cả khi `millis()` tràn số;
-- kiểm tra lưu/nạp NVS (stub `Preferences` giữ dữ liệu giữa các lần khởi tạo).
+- kiểm tra hẹn giờ theo giờ thực bằng đồng hồ giả `g_epoch` (truyền vào `AcController::begin()`): mốc kế tiếp
+  của "Lúc hh:mm" (hôm nay/ngày mai/qua nửa đêm/qua ranh giới ngày UTC), đến hạn, ESP32 khởi động lại trước/sau hạn,
+  hẹn bị lỡ, loại trừ hai loại hẹn giờ, giữ mốc cũ khi đổi cài đặt, chưa có giờ;
+- kiểm tra lưu/nạp NVS (stub `Preferences` giữ dữ liệu giữa các lần khởi tạo), kể cả mốc thời gian bất thường.
 
-Kết quả mong đợi: `324/324 dat` (người dùng đã chạy xác nhận). Nếu file `run.sh` mất quyền thực thi
-(sau khi giải nén zip), chạy `sh test/run.sh`. Chạy lại sau mỗi lần sửa `coolix_frames.h` hoặc
-`ac_controller.h`. Bộ test chỉ kiểm tra logic mã hoá và chọn khung, KHÔNG kiểm tra thời
-gian xung, mạch phát hay Wi-Fi.
+Kết quả mong đợi: `462/462 dat` (chạy trong container khi phát triển; người dùng chạy xác nhận ở máy mình). Nếu file
+`run.sh` mất quyền thực thi (sau khi giải nén zip), chạy `sh test/run.sh`. Chạy lại sau mỗi lần sửa `coolix_frames.h`
+hoặc `ac_controller.h`. Bộ test chỉ kiểm tra logic mã hoá, chọn khung và hẹn giờ, KHÔNG kiểm tra thời
+gian xung, mạch phát, Wi-Fi, NTP hay Web UI.
 
 ## Đã kiểm chứng
 
 - **Remote thật**: hành vi của máy lạnh (Sleep, Eco, hẹn giờ, đổi chế độ/nhiệt/quạt, tắt
   máy, Light/Turbo/Clean) đã được thu và đối chiếu bằng remote thật, qua `capture/`
   (`aircon.txt` ... `aircon28.txt`).
-- **Trên máy thật bằng ESP32 DevKit V1**: bản firmware trước khi thêm Light/Turbo/Clean
-  đã build, nạp và thử. ESP32 phát tín hiệu đến máy lạnh giống remote, chưa thấy điều gì
-  bất thường. **Bản v2** (Light, Turbo, Clean, quy luật quạt/Eco/Sleep mới, Clean 20 phút, hẹn BẬT + TẮT
-  cùng lúc) cũng đã build, nạp và thử trên máy thật: ESP32 phát đúng như remote, mọi thứ ổn (xác nhận 2026-10-23).
+- **Trên máy thật bằng ESP32 DevKit V1**: bản **v2** (Light, Turbo, Clean, quy luật quạt/Eco/Sleep mới, Clean 20 phút,
+  hẹn BẬT + TẮT cùng lúc) đã build, nạp và thử: ESP32 phát đúng như remote, mọi thứ ổn (xác nhận 2026-10-23).
+  Bản v3 chưa thử.
 - **IP tĩnh `192.168.6.200`** (nằm trong dải DHCP của router, router không cho đặt ngoài dải): hoạt
   động tốt trên mạng thật (người dùng xác nhận).
 - **Quy luật do người dùng thử trực tiếp trên remote và máy lạnh** (không có khung IR riêng):
@@ -183,6 +237,9 @@ gian xung, mạch phát hay Wi-Fi.
   hẳn; trong Clean Swing không phản ứng, Bật nguồn bị bỏ qua (bấm lại thì máy tắt ngay), Light vẫn
   đổi đèn; máy tắt thì Turbo/Clean không phản ứng còn Light chỉ bíp; Eco rồi Turbo/Sleep và hẹn giờ khi
   Turbo (quan sát bằng LED máy).
+- **Người dùng thử trên máy thật 2026-11-05** (dùng cho v3): khi đang hẹn giờ mà đổi nhiệt độ, tốc độ quạt, chế độ,
+  Eco, Sleep, Turbo, Swing, Light thì máy **giữ mốc hẹn giờ cũ**, không đếm lại; khi hẹn giờ Tắt chạy xong thì
+  Eco/Sleep/Turbo bị xóa như tắt máy bằng nút Nguồn.
 - **Turbo rồi Eco** (`aircon28`): quạt Thấp, bật Turbo, bật Eco rồi tắt Eco cho khung tắt Eco `B54AF50A83D0` (mã quạt `00` = Auto),
   nên bật Eco đặt quạt về Auto kể cả khi đang Turbo (xác nhận bằng tín hiệu thu, 2026-10-23).
 - **Trên PC**: đối chiếu từng byte khung IR với tín hiệu thu: bảng nhiệt Cool/Auto/Dry 17–30,
@@ -191,23 +248,40 @@ gian xung, mạch phát hay Wi-Fi.
   máy tắt + hẹn BẬT + đổi nhiệt (`aircon22`), Sleep (kể cả quạt Thấp, đổi quạt, chọn lại Auto, Sleep ở
   Auto), Eco (khung tắt mang mã quạt `83C0`–`83C3`, `83D0`, `83D2`; đổi quạt/nhiệt trong Eco), chuyển
   Eco → Sleep → Eco, Turbo rồi Eco/Sleep, hẹn TẮT khi Turbo, đổi chế độ khi đang Sleep/Eco/hẹn giờ,
-  tắt máy, Swing, Light trong Clean, NVS và các ca báo lỗi.
+  tắt máy, Swing, Light trong Clean, NVS và các ca báo lỗi. Logic hẹn giờ theo giờ thực của v3 cũng kiểm
+  trên PC (đồng hồ giả), đã chạy 60 đột biến vào logic mới, đều bị bắt.
 
 ## Giả định chưa có tín hiệu thu
 
-Firmware đang làm như dưới đây dựa trên suy luận, chưa có tín hiệu thu từ remote xác nhận.
-Mỗi mục đều có ca test hoặc ghi chú trong code; nếu thu được tín hiệu khác thì sửa code và test.
+Firmware đang làm như dưới đây dựa trên suy luận, chưa có tín hiệu thu hoặc phép thử trên máy thật xác nhận.
+Mỗi mục đều có ca test hoặc ghi chú trong code; nếu thấy máy phản ứng khác thì sửa code và test.
 
-- **Hẹn BẬT + TẮT cùng lúc**: đã thử trên máy thật qua ESP32, hoạt động như remote (xác nhận 2026-10-23).
-  Không còn là giả định.
 - **Thời lượng Clean 20 phút** là con số người dùng đo trên remote; ESP32 tự đếm bằng
   `millis()`, không nhận tín hiệu nào từ máy. Nếu máy chạy lệch vài giây hoặc vài phút thì
   cờ Clean trên ESP32 lệch theo.
+- **Đặt lại hẹn giờ "Sau X giờ"** (bấm "Đặt hẹn giờ" khi đã có hẹn, hoặc thêm hẹn Bật vào hẹn Tắt đang có): ESP32
+  coi cả hai mốc được máy đếm lại từ lúc gửi khung mới (`t_start` = bây giờ). Chưa có phép thử riêng.
+- **Hẹn BẬT và hẹn TẮT cùng một mốc phút** (chỉ có ở "Sau X giờ"): ESP32 xử lý Bật rồi Tắt (máy tắt). Chưa biết
+  máy thật làm gì. ("Lúc hh:mm" thì không cho trùng giờ.)
+- **Hẹn BẬT "Sau X giờ" chạy xong khi máy đang chạy** (ESP32 nghĩ máy chạy): giữ nguyên Eco/Sleep/Turbo (chỉ
+  hẹn Tắt mới xóa chúng).
+- **Hẹn "Lúc hh:mm" gửi đúng khung của nút Nguồn** (Bật = khung trạng thái thường, Tắt = `B27BE0`), kể cả khi
+  ESP32 nghĩ máy đang ở đúng trạng thái đó. Với Bật khi ESP32 nghĩ máy đang chạy và đang bật Eco/Turbo, chưa biết máy
+  có giữ các cờ đó không.
+- **DNS/NTP**: chưa thử router của dự án có chuyển tiếp DNS để phân giải `pool.ntp.org` không (xem log `[NTP]`).
 
 Chưa kiểm chứng: bản ESP32-C3 SuperMini (chưa có board, chưa viết code).
 
 Nếu máy phản ứng khác remote, thu tín hiệu mới bằng `capture/` rồi sửa đúng chỗ trong
 `coolix_frames.h` / `ac_controller.h`.
+
+## Cần thử sau khi nạp v3
+
+1. Serial Monitor có `[NTP] Đã đồng bộ giờ: hh:mm (UTC+7)` và giờ đúng giờ Việt Nam không?
+2. Đặt hẹn Tắt "Sau X giờ" 30 phút, xem Web UI đếm ngược đúng; hết giờ máy tắt và trang tự đổi sang "Tắt" (không cần tải lại).
+3. Hẹn "Lúc hh:mm" cách vài phút: ESP32 gửi lệnh đúng giờ, máy phản ứng.
+4. Hẹn "Lúc hh:mm" rồi rút điện ESP32 qua giờ hẹn, cắm lại: trang báo hẹn bị lỡ và nguồn trên trang vẫn giữ như trước.
+5. Hẹn "Sau X giờ" rồi rút điện ESP32 qua giờ hẹn, cắm lại: máy đã tự chạy đúng hẹn, trang hiện đúng trạng thái.
 
 ## Giới hạn của điều khiển IR một chiều
 
@@ -217,12 +291,14 @@ Nếu máy phản ứng khác remote, thu tín hiệu mới bằng `capture/` r�
   có thể cho kết quả ngược ý muốn.
 - Cờ Clean không lưu NVS. Nếu ESP32 mất điện hoặc khởi động lại giữa lúc Clean, cờ Clean
   mất và trạng thái nguồn trên ESP32 có thể lệch máy (máy vẫn đang Clean rồi tự tắt). Khi
-  đó hãy dùng remote hoặc đồng bộ lại bằng nút Nguồn. Web UI không tự cập nhật: sau khi
-  Clean hết giờ, tải lại trang để thấy máy đã tắt.
+  đó hãy dùng remote hoặc đồng bộ lại bằng nút Nguồn.
 - Cài đặt được lưu vào flash (NVS) mỗi khi đổi. Mất nguồn/khởi động lại không mất
-  cài đặt, nhưng ESP32 **không tự phát lại lệnh IR khi khởi động**. Hẹn giờ lưu
-  trong NVS không tự hết hạn: sau khi hẹn giờ đã chạy xong trên máy, Web UI vẫn
-  hiện hẹn giờ đó cho tới khi bạn đổi nguồn hoặc đặt lại.
+  cài đặt, nhưng ESP32 **không tự phát lại lệnh IR khi khởi động**.
+- Hẹn giờ "Sau X giờ" do máy đếm, ESP32 chỉ theo dõi bằng giờ thực nên cần có giờ NTP để biết hẹn giờ đã chạy
+  xong. Nếu ESP32 khởi động mà không có Internet, trạng thái hẹn giờ trên trang được giữ nguyên cho tới khi có giờ.
+- Hẹn giờ "Lúc hh:mm" cần ESP32 **luôn bật** tới giờ hẹn; nếu bị tắt qua giờ hẹn thì lệnh không được gửi (xem mục Hẹn giờ).
+- NVS của bản firmware cũ (v2) mà đang có hẹn giờ "Sau X giờ" sẽ bị coi là không hợp lệ (thiếu `t_start`) và
+  cài đặt quay về mặc định ở lần khởi động đầu tiên sau khi nạp v3.
 
 ## Lưu ý riêng cho ESP32-C3 SuperMini
 

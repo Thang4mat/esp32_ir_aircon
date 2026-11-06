@@ -14,7 +14,9 @@ class Preferences {
   bool getBool(const char* k, bool d) { return nvsStore().count(k) ? nvsStore()[k] : d; }
   uint8_t getUChar(const char* k, uint8_t d) { return nvsStore().count(k) ? nvsStore()[k] : d; }
   uint16_t getUShort(const char* k, uint16_t d) { return nvsStore().count(k) ? nvsStore()[k] : d; }
+  uint32_t getUInt(const char* k, uint32_t d) { return nvsStore().count(k) ? nvsStore()[k] : d; }
   void putBool(const char* k, bool v) { nvsStore()[k] = v; }
   void putUChar(const char* k, uint8_t v) { nvsStore()[k] = v; }
   void putUShort(const char* k, uint16_t v) { nvsStore()[k] = v; }
+  void putUInt(const char* k, uint32_t v) { nvsStore()[k] = v; }
 };

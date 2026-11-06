@@ -22,10 +22,22 @@
 // IP tĩnh (luôn dùng, không có DHCP). Mỗi macro là 4 số cách nhau bằng dấu phẩy.
 // Router của dự án không cho đặt IP ngoài dải DHCP; 192.168.6.200 nằm trong dải và chạy tốt.
 // Khi đổi mạng, chọn IP không trùng thiết bị khác.
-// DNS dùng chung địa chỉ gateway (firmware không phân giải tên miền ngoài).
+// DNS dùng chung địa chỉ gateway: router phải chuyển tiếp DNS thì ESP32 mới phân giải
+// được tên máy chủ NTP (NTP_SERVER) bên dưới.
 #define WIFI_STATIC_IP 192, 168, 6, 200
 #define WIFI_GATEWAY 192, 168, 6, 1
 #define WIFI_SUBNET 255, 255, 255, 0
+
+// Giờ thực (NTP) cho hẹn giờ "Lúc hh:mm" và theo dõi hẹn giờ "Sau X giờ".
+// Chỉ một máy chủ NTP (pool.ntp.org tự chọn máy chủ gần), không có máy chủ dự phòng.
+#define NTP_SERVER "pool.ntp.org"
+// Múi giờ Việt Nam UTC+7, không có giờ mùa hè. Hệ thống giữ epoch UTC, phần cộng 7 giờ
+// để ra giờ địa phương nằm trong ac_controller.h (dùng đúng hằng số này).
+#define TIMEZONE_OFFSET_SEC (7 * 3600UL)
+// Epoch nhỏ hơn mốc này (2026-01-01 00:00 UTC) coi là CHƯA đồng bộ giờ (ESP32 chưa có RTC pin).
+#define CLOCK_MIN_VALID_EPOCH 1767225600UL
+// Sau Wi-Fi quá 30 giây vẫn chưa có giờ thì in cảnh báo trên Serial (hẹn giờ sẽ bị từ chối).
+#define NTP_WARN_TIMEOUT_MS 30000UL
 
 // ---------------------------------------------------------------------------
 // GHI CHU PHAN CUNG MACH PHAT IR (tham khao khi doi linh kien, khong dung trong
