@@ -11,10 +11,14 @@ Hiện chỉ có project cho **ESP32 DevKit V1** (`controller/`). Bản ESP32-C3
 > Bản **v2** (Light/Turbo/Clean, quy luật quạt/Eco/Sleep mới) đã build, nạp và thử trên máy
 > lạnh thật, mọi thứ ổn (xác nhận 2026-10-23).
 > Bản **v3** (hẹn giờ theo giờ thực: NTP, hẹn "Lúc hh:mm", tự theo dõi hẹn giờ, Web UI tự cập nhật)
-> **chưa build, chưa nạp, chưa thử trên máy thật**. Phần logic đã qua bộ test trên PC; phần NTP/Wi-Fi/
-> Web UI chỉ kiểm tra cú pháp. Xem mục "Cần thử sau khi nạp v3".
+> đã build, nạp và thử trên máy lạnh thật bằng ESP32 DevKit V1: NTP đồng bộ đúng giờ và 5 phép thử hẹn giờ
+> đều đạt (xác nhận 2026-11-10). Xem mục "Đã kiểm chứng".
 
 ## Bước 1 — Xác minh giao thức (nếu đổi remote/máy)
+
+Lắp tạm mạch thu IR theo sơ đồ `so_do_hoan_chinh_mach_thu_ir_rx.png` (module VS1838B: VCC → 3V3, GND → GND,
+OUT → GPIO15; gỡ ra sau khi xác minh xong). Thứ tự chân VCC/GND/OUT không cố định giữa các lô module, kiểm tra
+chữ in trên board trước khi cấp nguồn.
 
 ```
 cd capture
@@ -51,8 +55,8 @@ tiếp DNS** (hầu hết đều có). Serial Monitor in `[NTP] Đã đồng b�
 
 ## Bước 3 — Lắp mạch phát IR & nạp firmware chính
 
-Lắp theo sơ đồ "Mạch phát IR (TX)" (R1=1kΩ, Q1=2N2222, R2=27Ω/2W, 2× LED IR333-C
-nối tiếp). Mạch giống hệt nhau cho cả 2 board, chỉ khác chân GPIO (xem `config.h`).
+Lắp theo sơ đồ "Mạch phát IR (TX)" (file `so_do_hoan_chinh_mach_phat_ir_tx.png`; R1=1kΩ, Q1=2N2222,
+R2=27Ω/2W, 2× LED IR333-C nối tiếp). Mạch giống hệt nhau cho cả 2 board, chỉ khác chân GPIO (xem `config.h`).
 
 ```
 pio run -t upload
@@ -71,6 +75,10 @@ Trang tự cập nhật trạng thái mỗi 5 giây khi tab đang hiển thị.
 ```
 esp32_ir_aircon/
 ├── README.md
+├── so_do_hoan_chinh_mach_phat_ir_tx.png   # sơ đồ mạch phát IR (Bước 3)
+├── so_do_hoan_chinh_mach_phat_ir_tx.svg   # file nguồn của sơ đồ trên: sửa SVG rồi xuất lại PNG
+├── so_do_hoan_chinh_mach_thu_ir_rx.png    # sơ đồ mạch thu IR, lắp tạm (Bước 1)
+├── so_do_hoan_chinh_mach_thu_ir_rx.svg    # file nguồn của sơ đồ trên: sửa SVG rồi xuất lại PNG
 ├── capture/                         # ESP32 DevKit V1 — thu và in tín hiệu remote (IRrecvDumpV2)
 │   ├── platformio.ini
 │   └── src/
@@ -229,7 +237,11 @@ gian xung, mạch phát, Wi-Fi, NTP hay Web UI.
   (`aircon.txt` ... `aircon28.txt`).
 - **Trên máy thật bằng ESP32 DevKit V1**: bản **v2** (Light, Turbo, Clean, quy luật quạt/Eco/Sleep mới, Clean 20 phút,
   hẹn BẬT + TẮT cùng lúc) đã build, nạp và thử: ESP32 phát đúng như remote, mọi thứ ổn (xác nhận 2026-10-23).
-  Bản v3 chưa thử.
+- **Bản v3 trên máy thật bằng ESP32 DevKit V1** (người dùng thử 2026-11-10): router phân giải được `pool.ntp.org`,
+  giờ UTC+7 đúng. Hẹn Tắt "Sau X giờ" 30 phút: đếm ngược đúng, máy tắt, trang tự đổi sang "Tắt" không cần tải lại.
+  Hẹn "Lúc hh:mm": ESP32 gửi lệnh đúng giờ, máy bật/tắt đúng hẹn (không có phản ứng bíp). Rút điện ESP32 qua giờ hẹn
+  "Lúc hh:mm": trang báo hẹn bị lỡ, nguồn giữ như trước khi rút. Rút điện qua giờ hẹn "Sau X giờ": máy tự tắt đúng
+  hẹn (máy tự đếm), trang hiện "Tắt".
 - **IP tĩnh `192.168.6.200`** (nằm trong dải DHCP của router, router không cho đặt ngoài dải): hoạt
   động tốt trên mạng thật (người dùng xác nhận).
 - **Quy luật do người dùng thử trực tiếp trên remote và máy lạnh** (không có khung IR riêng):
@@ -268,20 +280,11 @@ Mỗi mục đều có ca test hoặc ghi chú trong code; nếu thấy máy ph�
 - **Hẹn "Lúc hh:mm" gửi đúng khung của nút Nguồn** (Bật = khung trạng thái thường, Tắt = `B27BE0`), kể cả khi
   ESP32 nghĩ máy đang ở đúng trạng thái đó. Với Bật khi ESP32 nghĩ máy đang chạy và đang bật Eco/Turbo, chưa biết máy
   có giữ các cờ đó không.
-- **DNS/NTP**: chưa thử router của dự án có chuyển tiếp DNS để phân giải `pool.ntp.org` không (xem log `[NTP]`).
 
 Chưa kiểm chứng: bản ESP32-C3 SuperMini (chưa có board, chưa viết code).
 
 Nếu máy phản ứng khác remote, thu tín hiệu mới bằng `capture/` rồi sửa đúng chỗ trong
 `coolix_frames.h` / `ac_controller.h`.
-
-## Cần thử sau khi nạp v3
-
-1. Serial Monitor có `[NTP] Đã đồng bộ giờ: hh:mm (UTC+7)` và giờ đúng giờ Việt Nam không?
-2. Đặt hẹn Tắt "Sau X giờ" 30 phút, xem Web UI đếm ngược đúng; hết giờ máy tắt và trang tự đổi sang "Tắt" (không cần tải lại).
-3. Hẹn "Lúc hh:mm" cách vài phút: ESP32 gửi lệnh đúng giờ, máy phản ứng.
-4. Hẹn "Lúc hh:mm" rồi rút điện ESP32 qua giờ hẹn, cắm lại: trang báo hẹn bị lỡ và nguồn trên trang vẫn giữ như trước.
-5. Hẹn "Sau X giờ" rồi rút điện ESP32 qua giờ hẹn, cắm lại: máy đã tự chạy đúng hẹn, trang hiện đúng trạng thái.
 
 ## Giới hạn của điều khiển IR một chiều
 
